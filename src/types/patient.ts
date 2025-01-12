@@ -1,4 +1,3 @@
-// src/types/patient.ts
 export interface VitalSigns {
     bloodPressure: string;
     heartRate: number;
@@ -14,10 +13,14 @@ export interface VitalSigns {
     vitals: VitalSigns;
   }
 
+  export interface PatientUpdate {
+    patientId: string;
+    vitals: Partial<VitalSigns>;
+  }
+
+
   export interface WebSocketMessage {
     patientId: string;
     vitals: Partial<VitalSigns>;
     timestamp?: string;
   }
-
-  export type WebSocketMessageCallback = (message: WebSocketMessage) => void;
