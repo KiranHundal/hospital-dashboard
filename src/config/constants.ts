@@ -17,3 +17,43 @@ export const CONFIG = {
         }
       }
     } as const;
+export const VITAL_THRESHOLDS = {
+    BLOOD_PRESSURE: {
+      SYSTOLIC: {
+        HIGH: 140,
+        LOW: 90
+      },
+      DIASTOLIC: {
+        HIGH: 90,
+        LOW: 60
+      }
+    },
+    HEART_RATE: {
+      HIGH: 100,
+      LOW: 60
+    },
+    OXYGEN_LEVEL: {
+      LOW: 95
+    }
+  } as const;
+
+  export const WEBSOCKET_CONFIG = {
+    URL: 'ws://localhost:8080',
+    RECONNECT_INTERVAL: 3000,
+    MAX_RECONNECT_ATTEMPTS: 5
+  } as const;
+
+  export const UI_CONFIG = {
+    HIGHLIGHT_DURATION: 2000,
+    GRID_BREAKPOINTS: {
+      MOBILE: 1,
+      TABLET: 2,
+      DESKTOP: 4
+    }
+  } as const;
+
+  export const LOCAL_STORAGE_KEYS = {
+    PATIENT_DATA: 'patientData',
+    LAST_UPDATE: 'lastUpdate',
+    USER_PREFERENCES: 'userPreferences'
+  } as const;

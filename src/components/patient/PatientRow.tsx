@@ -1,5 +1,4 @@
 import { Patient } from '../../types/patient';
-import { VitalsDisplay } from './VitalsDisplay';
 
 interface PatientRowProps {
   patient: Patient;
@@ -24,7 +23,9 @@ export const PatientRow = ({ patient, isUpdated }: PatientRowProps) => (
       {patient.gender}
     </td>
     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-      <VitalsDisplay vitals={patient.vitals} isUpdated={isUpdated} />
+      <div>BP: {patient.vitals.bloodPressure}</div>
+      <div>HR: {patient.vitals.heartRate} bpm</div>
+      <div>O₂: {patient.vitals.oxygenLevel}%</div>
     </td>
   </tr>
 );

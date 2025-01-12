@@ -1,5 +1,6 @@
 import { Header } from './Header';
 import { PatientTable } from '../patient/PatientTable';
+import { PatientSummary } from '../patient/PatientSummary';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { Patient } from '../../types/patient';
@@ -37,6 +38,9 @@ export const Dashboard = ({
           isConnected={isConnected}
           lastUpdate={lastUpdate}
         />
+
+        <PatientSummary patients={patients} />
+
         <PatientTable
           patients={patients}
           updatedPatientId={updatedPatientId}
