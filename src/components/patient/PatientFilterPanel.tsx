@@ -41,9 +41,9 @@ export const PatientFilterPanel = ({
   };
 
   return (
-    <div className="fixed top-0 right-0 w-80 h-full bg-white shadow-lg z-50 p-6 transition-transform transform translate-x-0">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold">Filters</h3>
+    <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-lg z-50 p-6 transition-transform transform translate-x-0 border-l">
+      <div className="flex justify-between items-center mb-6 border-b pb-4">
+        <h3 className="text-lg font-semibold text-gray-800">Filters</h3>
         <button
           onClick={onClose}
           className="text-gray-500 hover:text-gray-700 focus:outline-none"
@@ -56,22 +56,29 @@ export const PatientFilterPanel = ({
             fill="none"
             stroke="currentColor"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
-      <div className="space-y-4">
+
+      <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium">Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full border rounded p-2"
+            className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium">Age Range</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Age Range</label>
           <div className="flex space-x-2">
             <input
               type="number"
@@ -79,7 +86,7 @@ export const PatientFilterPanel = ({
               onChange={(e) =>
                 setAgeRange((prev) => [parseInt(e.target.value) || undefined, prev[1]])
               }
-              className="w-full border rounded p-2"
+              className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
             <input
               type="number"
@@ -87,16 +94,17 @@ export const PatientFilterPanel = ({
               onChange={(e) =>
                 setAgeRange((prev) => [prev[0], parseInt(e.target.value) || undefined])
               }
-              className="w-full border rounded p-2"
+              className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
         </div>
+
         <div>
-          <label className="block text-sm font-medium">Gender</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
           <select
             value={gender}
             onChange={(e) => setGender(e.target.value as 'male' | 'female' | 'other')}
-            className="w-full border rounded p-2"
+            className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
             <option value="">All</option>
             <option value="male">Male</option>
@@ -104,62 +112,59 @@ export const PatientFilterPanel = ({
             <option value="other">Other</option>
           </select>
         </div>
+
         <div>
-          <label className="block text-sm font-medium">Room</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
           <input
             type="text"
             value={room}
             onChange={(e) => setRoom(e.target.value)}
-            className="w-full border rounded p-2"
+            className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium">Critical Vitals</label>
-          <div>
-            <input
-              type="checkbox"
-              checked={criticalVitals.highBP}
-              onChange={() =>
-                setCriticalVitals((prev) => ({ ...prev, highBP: !prev.highBP }))
-              }
-            />
-            <span className="ml-2">High Blood Pressure</span>
-          </div>
-          <div>
-            <input
-              type="checkbox"
-              checked={criticalVitals.lowOxygen}
-              onChange={() =>
-                setCriticalVitals((prev) => ({ ...prev, lowOxygen: !prev.lowOxygen }))
-              }
-            />
-            <span className="ml-2">Low Oxygen</span>
-          </div>
-          <div>
-            <input
-              type="checkbox"
-              checked={criticalVitals.abnormalHeartRate}
-              onChange={() =>
-                setCriticalVitals((prev) => ({
-                  ...prev,
-                  abnormalHeartRate: !prev.abnormalHeartRate,
-                }))
-              }
-            />
-            <span className="ml-2">Abnormal Heart Rate</span>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Critical Vitals
+          </label>
+          <div className="space-y-2">
+            {['High Blood Pressure', 'Low Oxygen', 'Abnormal Heart Rate'].map(
+              (label, index) => (
+                <div key={label} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={Object.values(criticalVitals)[index]}
+                    onChange={() =>
+                      setCriticalVitals((prev) => ({
+                        ...prev,
+                        [Object.keys(criticalVitals)[index]]:
+                          !Object.values(criticalVitals)[index],
+                      }))
+                    }
+                    className="rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">{label}</span>
+                </div>
+              )
+            )}
           </div>
         </div>
+
         <div>
-          <input
-            type="checkbox"
-            checked={recentUpdates}
-            onChange={() => setRecentUpdates(!recentUpdates)}
-          />
-          <span className="ml-2">Recent Updates</span>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={recentUpdates}
+              onChange={() => setRecentUpdates(!recentUpdates)}
+              className="rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Recent Updates</span>
+          </div>
         </div>
+
         <button
           onClick={handleApplyFilters}
-          className="w-full bg-blue-500 text-white p-2 rounded"
+          className="w-full bg-blue-500 text-white font-semibold p-3 rounded-lg hover:bg-blue-600 transition"
         >
           Apply Filters
         </button>

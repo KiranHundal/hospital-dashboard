@@ -5,7 +5,7 @@ export const CONFIG = {
     VITAL_SIGNS: {
         NORMAL_BP_RANGE: {
           min: 90,
-          max: 120
+          max: 140
         },
         NORMAL_HR_RANGE: {
           min: 60,

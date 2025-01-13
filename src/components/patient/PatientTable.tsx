@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Patient } from '../../types/patient';
+import { PatientRow } from './PatientRow';
 
 type SortField = 'id' | 'name' | 'room' | 'age' | 'gender' | 'vitals';
 type SortDirection = 'asc' | 'desc';
@@ -93,31 +94,11 @@ export const PatientTable = ({ patients, updatedPatientId }: PatientTableProps) 
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {sortedPatients.map((patient) => (
-            <tr
-              key={patient.id}
-              className={`${patient.id === updatedPatientId ? 'bg-blue-50 transition-colors duration-500' : ''}`}
-            >
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {patient.id}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {patient.name}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {patient.room}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {patient.age}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {patient.gender}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div>BP: {patient.vitals.bloodPressure}</div>
-                <div>HR: {patient.vitals.heartRate} bpm</div>
-                <div>O₂: {patient.vitals.oxygenLevel}%</div>
-              </td>
-            </tr>
+            <PatientRow
+            key={patient.id}
+            patient={patient}
+            isUpdated={patient.id === updatedPatientId}
+          />
           ))}
         </tbody>
       </table>

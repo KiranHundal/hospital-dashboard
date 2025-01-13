@@ -115,7 +115,9 @@ export class PatientService {
         if (patient.id === patientId) {
           return {
             ...patient,
-            vitals: { ...patient.vitals, ...updatedVitals }
+            vitals: { ...patient.vitals, ...updatedVitals },
+            lastUpdated: new Date().toISOString() 
+
           };
         }
         return patient;

@@ -15,7 +15,7 @@ export const patientAdapter = {
         age: this.generateAge(seed),
         room: this.generateRoomNumber(post.id),
         gender: this.determineGender(post.id),
-        vitals
+        vitals,
       };
     } catch (error) {
       throw new TransformationError(
