@@ -8,10 +8,16 @@ export interface VitalSigns {
     id: string;
     name: string;
     age: number;
+    gender: "male" | "female" | "other";
     room: string;
-    gender: 'male' | 'female';
-    vitals: VitalSigns;
+    vitals: {
+      bloodPressure: string;
+      oxygenLevel: number;
+      heartRate: number;
+    };
+    isUpdated?: boolean;
   }
+
 
   export interface PatientUpdate {
     patientId: string;
