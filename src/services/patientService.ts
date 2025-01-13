@@ -23,6 +23,16 @@ export class PatientService {
 
   async fetchPatients(): Promise<PatientServiceResponse> {
     try {
+        const cachedData = this.getCachedPatients();
+        if (cachedData) {
+          console.log('Using cached data');
+          return {
+            patients: cachedData,
+            totalCount: cachedData.length
+          };
+        }
+
+
       const { data: posts, statusCode } = await apiService.fetchPosts();
       console.log(`Fetched ${posts.length} posts with status ${statusCode}`);
 
@@ -37,6 +47,8 @@ export class PatientService {
       }, []);
 
       patients.sort((a, b) => a.id.localeCompare(b.id));
+      this.persistPatientsToCache(patients);
+
 
       return {
         patients,

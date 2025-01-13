@@ -1,32 +1,40 @@
-// src/App.tsx
+import { useEffect } from 'react';
+import { useAppDispatch } from './hooks/redux';
 import { useWebSocket } from './hooks/useWebSocket';
-import { usePatients } from './hooks/usePatients';
 import { Dashboard } from './components/layout/Dashboard';
+import { PatientService } from './services/patientService';
+import { setLoading, setPatients, setError } from './store/slices/patientSlice';
 
 function App() {
-  const {
-    patients,
-    loading,
-    error,
-    updatedPatientId,
-    lastUpdate,
-    handlePatientUpdate
-  } = usePatients();
+  const dispatch = useAppDispatch();
 
-  const { isConnected } = useWebSocket({
-    onPatientUpdate: handlePatientUpdate
-  });
+  useWebSocket();
 
-  return (
-    <Dashboard
-      patients={patients}
-      loading={loading}
-      error={error}
-      isConnected={isConnected}
-      updatedPatientId={updatedPatientId}
-      lastUpdate={lastUpdate}
-    />
-  );
+  useEffect(() => {
+    const loadData = async () => {
+      dispatch(setLoading(true));
+      try {
+        const patientService = PatientService.getInstance();
+        const { patients, error: serviceError } = await patientService.fetchPatients();
+
+        if (serviceError) {
+          dispatch(setError(serviceError));
+        } else {
+          dispatch(setPatients(patients));
+          patientService.persistPatientsToCache(patients);
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error
+          ? err.message
+          : 'Failed to load patient data';
+        dispatch(setError(errorMessage));
+      }
+    };
+
+    loadData();
+  }, [dispatch]);
+
+  return <Dashboard />;
 }
 
 export default App;

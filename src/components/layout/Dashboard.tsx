@@ -1,35 +1,35 @@
 import { useState } from 'react';
+import { useAppSelector } from '../../hooks/redux';
+import { selectPatientsDashboard } from '../../store/selectors/patientSelectors';
 import { Header } from './Header';
 import { PatientTable } from '../patient/PatientTable';
 import { PatientSummary } from '../patient/PatientSummary';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
-import { Patient } from '../../types/patient';
 import { usePatientFilter } from '../../hooks/usePatientFilter';
 import { useSearch } from '../../hooks/useSearch';
 import { PatientFilterPanel } from '../patient/PatientFilterPanel';
 
-export const Dashboard = ({
-  patients,
-  loading,
-  error,
-  isConnected,
-  updatedPatientId,
-  lastUpdate,
-}: {
-  patients: Patient[];
-  loading: boolean;
-  error: string | null;
-  isConnected: boolean;
-  updatedPatientId?: string;
-  lastUpdate?: string;
-}) => {
+export const Dashboard = () => {
+  const {
+    patients,
+    loading,
+    error,
+    updatedPatientId,
+    lastUpdate,
+    isConnected
+  } = useAppSelector(selectPatientsDashboard);
+
   const [isFilterPanelOpen, setFilterPanelOpen] = useState(false);
 
   const { filteredPatients, setFilterCriteria } = usePatientFilter(patients);
 
-  const { searchTerm, setSearchTerm, setExactSearchTerm, filteredPatients: searchedPatients } =
-    useSearch(filteredPatients);
+  const {
+    searchTerm,
+    setSearchTerm,
+    setExactSearchTerm,
+    filteredPatients: searchedPatients
+  } = useSearch(filteredPatients);
 
   const resetAll = () => {
     setFilterCriteria({});
@@ -51,7 +51,11 @@ export const Dashboard = ({
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Header patientCount={searchedPatients.length} isConnected={isConnected} lastUpdate={lastUpdate} />
+        <Header
+          patientCount={searchedPatients.length}
+          isConnected={isConnected}
+          lastUpdate={lastUpdate}
+        />
 
         <PatientSummary patients={searchedPatients} />
 
@@ -70,16 +74,25 @@ export const Dashboard = ({
             >
               Search
             </button>
-            <button onClick={resetAll} className="p-2 text-gray-500 hover:text-gray-700">
+            <button
+              onClick={resetAll}
+              className="p-2 text-gray-500 hover:text-gray-700"
+            >
               Reset
             </button>
           </div>
-          <button onClick={() => setFilterPanelOpen(true)} className="p-2 text-gray-500 hover:text-gray-700">
+          <button
+            onClick={() => setFilterPanelOpen(true)}
+            className="p-2 text-gray-500 hover:text-gray-700"
+          >
             Filter
           </button>
         </div>
 
-        <PatientTable patients={searchedPatients} updatedPatientId={updatedPatientId} />
+        <PatientTable
+          patients={searchedPatients}
+          updatedPatientId={updatedPatientId}
+        />
       </div>
     </div>
   );

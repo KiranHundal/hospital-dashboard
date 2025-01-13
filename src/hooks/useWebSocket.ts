@@ -1,53 +1,63 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
+import { useAppDispatch } from './redux';
 import { WebSocketMessage } from '../types/patient';
 import { CONFIG } from '../config/constants';
+import { setConnected, setError } from '../store/slices/websocketSlice';
+import { updatePatient, clearUpdateHighlight } from '../store/slices/patientSlice';
+import { PatientService } from '../services/patientService';
 
-interface UseWebSocketOptions {
-  onPatientUpdate: (message: WebSocketMessage) => void;
-}
-
-export const useWebSocket = ({ onPatientUpdate }: UseWebSocketOptions) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export const useWebSocket = () => {
+  const dispatch = useAppDispatch();
 
   const connect = useCallback(() => {
     const ws = new WebSocket(CONFIG.WEBSOCKET_URL);
 
     ws.onopen = () => {
       console.log('WebSocket Connected');
-      setIsConnected(true);
-      setError(null);
+      dispatch(setConnected(true));
     };
 
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
         if (isValidWebSocketMessage(message)) {
-          onPatientUpdate(message);
+          dispatch(updatePatient(message));
+          const patientService = PatientService.getInstance();
+          const cachedPatients = patientService.getCachedPatients();
+          if (cachedPatients) {
+            const updatedPatients = cachedPatients.map(patient =>
+              patient.id === message.patientId
+                ? { ...patient, vitals: { ...patient.vitals, ...message.vitals } }
+                : patient
+            );
+            patientService.persistPatientsToCache(updatedPatients);
+          }
+          setTimeout(() => {
+            dispatch(clearUpdateHighlight());
+          }, 2000);
         } else {
           console.warn('Invalid message format:', message);
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         console.error('WebSocket message error:', errorMessage);
-        setError('Error processing update');
+        dispatch(setError('Error processing update'));
       }
     };
 
     ws.onclose = () => {
       console.log('WebSocket Disconnected');
-      setIsConnected(false);
+      dispatch(setConnected(false));
       setTimeout(connect, 3000);
     };
 
     ws.onerror = (event) => {
       console.error('WebSocket Error:', event);
-      setError('WebSocket connection error');
-      setIsConnected(false);
+      dispatch(setError('WebSocket connection error'));
     };
 
     return ws;
-  }, [onPatientUpdate]);
+  }, [dispatch]);
 
   useEffect(() => {
     const ws = connect();
@@ -55,11 +65,6 @@ export const useWebSocket = ({ onPatientUpdate }: UseWebSocketOptions) => {
       ws.close();
     };
   }, [connect]);
-
-  return {
-    isConnected,
-    error
-  };
 };
 
 function isValidWebSocketMessage(message: unknown): message is WebSocketMessage {
