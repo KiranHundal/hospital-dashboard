@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { analyzeVitals } from '../utils/vitalUtils';
 import { VitalSigns } from '../types/patient';
 
@@ -9,13 +9,22 @@ export interface SortConfig<T> {
   direction: SortDirection;
 }
 
+const SORT_KEY = 'user_sort_config';
+
 export const useSorting = <T extends { vitals?: VitalSigns }>(
   data: T[],
   defaultSortField?: keyof T
 ) => {
-  const [sortConfig, setSortConfig] = useState<SortConfig<T> | null>(
-    defaultSortField ? { field: defaultSortField, direction: 'asc' } : null
-  );
+  const [sortConfig, setSortConfig] = useState<SortConfig<T> | null>(() => {
+    const savedConfig = localStorage.getItem(SORT_KEY);
+    return savedConfig ? JSON.parse(savedConfig) : defaultSortField ? { field: defaultSortField, direction: 'asc' } : null;
+  });
+
+  useEffect(() => {
+    if (sortConfig) {
+      localStorage.setItem(SORT_KEY, JSON.stringify(sortConfig));
+    }
+  }, [sortConfig]);
 
   const sortedData = useMemo(() => {
     if (!sortConfig) return data;
@@ -59,9 +68,8 @@ export const useSorting = <T extends { vitals?: VitalSigns }>(
     });
   };
   const resetSorting = () => {
-    console.log("Resetting sorting...");
-
     setSortConfig(null);
+    localStorage.removeItem(SORT_KEY);
   };
   return { sortedData, sortConfig, handleSort, resetSorting };
 };
