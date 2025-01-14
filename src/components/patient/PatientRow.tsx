@@ -10,7 +10,6 @@ interface PatientRowProps {
 export const PatientRow = ({ patient, isUpdated }: PatientRowProps) => {
   const vitalsStatus = analyzeVitals(patient.vitals);
   const isCritical = vitalsStatus.severityScore > 0;
-  console.log('Rendering PatientRow:', { patient, isUpdated, vitalsStatus, isCritical });
 
   return (
     <tr

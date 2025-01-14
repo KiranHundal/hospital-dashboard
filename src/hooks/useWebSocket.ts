@@ -21,13 +21,16 @@ export const useWebSocket = () => {
       try {
         const message = JSON.parse(event.data);
         if (isValidWebSocketMessage(message)) {
-          dispatch(updatePatient(message));
+          dispatch(updatePatient({
+            ...message,
+            isUpdated: true, 
+          }));
           const patientService = PatientService.getInstance();
           const cachedPatients = patientService.getCachedPatients();
           if (cachedPatients) {
             const updatedPatients = cachedPatients.map(patient =>
               patient.id === message.patientId
-                ? { ...patient, vitals: { ...patient.vitals, ...message.vitals } }
+                ? { ...patient, vitals: { ...patient.vitals, ...message.vitals }, isUpdated: true }
                 : patient
             );
             patientService.persistPatientsToCache(updatedPatients);

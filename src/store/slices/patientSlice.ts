@@ -2,20 +2,20 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Patient, WebSocketMessage } from '../../types/patient';
 
 interface PatientState {
-    patients: Patient[];
-    loading: boolean;
-    error: string | undefined;
-    updatedPatientId: string | undefined;
-    lastUpdate: string | undefined;
-  }
+  patients: Patient[];
+  loading: boolean;
+  error: string | undefined;
+  updatedPatientId: string | undefined;
+  lastUpdate: string | undefined;
+}
 
-  const initialState: PatientState = {
-    patients: [],
-    loading: false,
-    error: undefined,
-    updatedPatientId: undefined,
-    lastUpdate: undefined 
-  };
+const initialState: PatientState = {
+  patients: [],
+  loading: false,
+  error: undefined,
+  updatedPatientId: undefined,
+  lastUpdate: undefined,
+};
 
 const patientSlice = createSlice({
   name: 'patients',
@@ -34,18 +34,23 @@ const patientSlice = createSlice({
       state.loading = false;
     },
     updatePatient(state, action: PayloadAction<WebSocketMessage>) {
-      const { patientId, vitals } = action.payload;
-      const patient = state.patients.find(p => p.id === patientId);
-      if (patient) {
-        patient.vitals = { ...patient.vitals, ...vitals };
-        state.updatedPatientId = patientId;
-        state.lastUpdate = new Date().toISOString();
-      }
-    },
+        const { patientId, vitals } = action.payload;
+        const patient = state.patients.find((p) => p.id === patientId);
+        if (patient) {
+          patient.vitals = { ...patient.vitals, ...vitals };
+          patient.isUpdated = true; // Set isUpdated to true
+          state.updatedPatientId = patientId;
+          state.lastUpdate = new Date().toISOString();
+        }
+      },
+
     clearUpdateHighlight(state) {
       state.updatedPatientId = undefined;
-    }
-  }
+      state.patients.forEach((patient) => {
+        patient.isUpdated = false;
+      });
+    },
+  },
 });
 
 export const {
@@ -53,7 +58,7 @@ export const {
   setPatients,
   setError,
   updatePatient,
-  clearUpdateHighlight
+  clearUpdateHighlight,
 } = patientSlice.actions;
 
 export default patientSlice.reducer;

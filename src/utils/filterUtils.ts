@@ -61,7 +61,10 @@ export const applyFilters = (patients: Patient[], criteria: FilterCriteria): Pat
     }
 
     if (criteria.recentUpdates && !patient.isUpdated) {
+        console.log('Filtering patient:', patient.id, 'isUpdated:', patient.isUpdated);
+
       return false;
+
     }
 
     return true;

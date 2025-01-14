@@ -29,4 +29,6 @@ export interface VitalSigns {
     patientId: string;
     vitals: Partial<VitalSigns>;
     timestamp?: string;
+    isUpdated?: boolean;
+
   }
