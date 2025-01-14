@@ -32,3 +32,20 @@ export interface VitalSigns {
     isUpdated?: boolean;
 
   }
+  // export type WebSocketMessage = {
+  //   type: 'UPDATE_VITALS' | 'NEW_PATIENT';
+  // } & (
+  //   | {
+  //       type: 'UPDATE_VITALS';
+  //       patientId: string;
+  //       vitals: Partial<VitalSigns>;
+  //     }
+  //   | {
+  //       type: 'NEW_PATIENT';
+  //       name: string;
+  //       age?: number;
+  //       room?: string;
+  //       gender?: 'male' | 'female';
+  //       vitals?: VitalSigns;
+  //     }
+  // );

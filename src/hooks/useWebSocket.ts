@@ -1,19 +1,81 @@
-import { useEffect, useCallback } from 'react';
-import { useAppDispatch } from './redux';
-import { WebSocketMessage } from '../types/patient';
-import { CONFIG } from '../config/constants';
-import { setConnected, setError } from '../store/slices/websocketSlice';
-import { updatePatient, clearUpdateHighlight } from '../store/slices/patientSlice';
-import { PatientService } from '../services/patientService';
+import { useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAppDispatch } from "./redux";
+import { WebSocketMessage } from "../types/patient";
+import { CONFIG } from "../config/constants";
+import { setConnected, setError } from "../store/slices/websocketSlice";
+import {
+  updatePatient,
+  clearUpdateHighlight,
+} from "../store/slices/patientSlice";
+// import { PatientService } from '../services/patientService';
+import { QUERY_KEYS } from "./queries";
 
 export const useWebSocket = () => {
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
+
+  const handleWebSocketMessage = useCallback(
+    (message: WebSocketMessage) => {
+      try {
+        dispatch(
+          updatePatient({
+            patientId: message.patientId,
+            vitals: message.vitals,
+            isUpdated: true,
+          })
+        );
+
+        queryClient.setQueryData(QUERY_KEYS.patients, (oldData: any) => {
+          if (!Array.isArray(oldData)) return oldData;
+          return oldData.map((patient) =>
+            patient.id === message.patientId
+              ? {
+                  ...patient,
+                  vitals: { ...patient.vitals, ...message.vitals },
+                  isUpdated: true,
+                }
+              : patient
+          );
+        });
+
+        queryClient.setQueryData(
+          QUERY_KEYS.patient(message.patientId),
+          (oldData: any) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              vitals: { ...oldData.vitals, ...message.vitals },
+              isUpdated: true,
+            };
+          }
+        );
+
+        setTimeout(() => {
+          dispatch(clearUpdateHighlight());
+
+          queryClient.setQueryData(QUERY_KEYS.patients, (oldData: any) => {
+            if (!Array.isArray(oldData)) return oldData;
+            return oldData.map((patient) =>
+              patient.id === message.patientId
+                ? { ...patient, isUpdated: false }
+                : patient
+            );
+          });
+        }, 2000);
+      } catch (err) {
+        console.error("Error processing WebSocket message:", err);
+        dispatch(setError("Error processing update"));
+      }
+    },
+    [dispatch, queryClient]
+  );
 
   const connect = useCallback(() => {
     const ws = new WebSocket(CONFIG.WEBSOCKET_URL);
 
     ws.onopen = () => {
-      console.log('WebSocket Connected');
+      console.log("WebSocket Connected");
       dispatch(setConnected(true));
     };
 
@@ -21,46 +83,29 @@ export const useWebSocket = () => {
       try {
         const message = JSON.parse(event.data);
         if (isValidWebSocketMessage(message)) {
-          dispatch(updatePatient({
-            ...message,
-            isUpdated: true, 
-          }));
-          const patientService = PatientService.getInstance();
-          const cachedPatients = patientService.getCachedPatients();
-          if (cachedPatients) {
-            const updatedPatients = cachedPatients.map(patient =>
-              patient.id === message.patientId
-                ? { ...patient, vitals: { ...patient.vitals, ...message.vitals }, isUpdated: true }
-                : patient
-            );
-            patientService.persistPatientsToCache(updatedPatients);
-          }
-          setTimeout(() => {
-            dispatch(clearUpdateHighlight());
-          }, 2000);
+          handleWebSocketMessage(message);
         } else {
-          console.warn('Invalid message format:', message);
+          console.warn("Invalid message format:", message);
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.error('WebSocket message error:', errorMessage);
-        dispatch(setError('Error processing update'));
+        console.error("WebSocket message error:", err);
+        dispatch(setError("Error processing update"));
       }
     };
 
     ws.onclose = () => {
-      console.log('WebSocket Disconnected');
+      console.log("WebSocket Disconnected");
       dispatch(setConnected(false));
       setTimeout(connect, 3000);
     };
 
     ws.onerror = (event) => {
-      console.error('WebSocket Error:', event);
-      dispatch(setError('WebSocket connection error'));
+      console.error("WebSocket Error:", event);
+      dispatch(setError("WebSocket connection error"));
     };
 
     return ws;
-  }, [dispatch]);
+  }, [dispatch, handleWebSocketMessage]);
 
   useEffect(() => {
     const ws = connect();
@@ -70,13 +115,15 @@ export const useWebSocket = () => {
   }, [connect]);
 };
 
-function isValidWebSocketMessage(message: unknown): message is WebSocketMessage {
+function isValidWebSocketMessage(
+  message: unknown
+): message is WebSocketMessage {
   return (
-    typeof message === 'object' &&
+    typeof message === "object" &&
     message !== null &&
-    'patientId' in message &&
-    'vitals' in message &&
-    typeof (message as WebSocketMessage).patientId === 'string' &&
-    typeof (message as WebSocketMessage).vitals === 'object'
+    "patientId" in message &&
+    "vitals" in message &&
+    typeof (message as WebSocketMessage).patientId === "string" &&
+    typeof (message as WebSocketMessage).vitals === "object"
   );
 }

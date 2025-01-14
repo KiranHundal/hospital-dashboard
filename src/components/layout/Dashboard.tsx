@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAppSelector } from "../../hooks/redux";
-import { selectPatientsDashboard } from "../../store/selectors/patientSelectors";
+import { selectUpdatedPatientId, selectWebSocketState } from "../../store/selectors/patientSelectors";
 import { Header } from "./Header";
 import { PatientTable } from "../patient/PatientTable";
 import { PatientSummary } from "../patient/PatientSummary";
@@ -11,19 +11,24 @@ import { useSearch } from "../../hooks/useSearch";
 import { PatientFilterPanel } from "../patient/PatientFilterPanel";
 import { SearchAndFilterBar } from "../ui/SearchAndFilterBar";
 import { useSorting } from "../../hooks/useSorting";
+import { usePatients } from "../../hooks/queries";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 export const Dashboard = () => {
+  useWebSocket();
+
+  const { isConnected } = useAppSelector(selectWebSocketState);
+  const updatedPatientId = useAppSelector(selectUpdatedPatientId);
+
   const {
-    patients,
-    loading,
+    data: patients = [],
+    isLoading,
     error,
-    updatedPatientId,
-    lastUpdate,
-    isConnected,
-  } = useAppSelector(selectPatientsDashboard);
+    isError,
+    dataUpdatedAt
+  } = usePatients();
 
   const [isFilterPanelOpen, setFilterPanelOpen] = useState(false);
-
   const { filteredPatients, setFilterCriteria } = usePatientFilter(patients);
   const {
     searchTerm,
@@ -31,10 +36,13 @@ export const Dashboard = () => {
     setExactSearchTerm,
     filteredPatients: searchedPatients,
   } = useSearch(filteredPatients);
-  const { sortedData: sortedPatients, sortConfig, handleSort, resetSorting } = useSorting(
-    searchedPatients,
-    "id"
-  );
+
+  const {
+    sortedData: sortedPatients,
+    sortConfig,
+    handleSort,
+    resetSorting
+  } = useSorting(searchedPatients, "id");
 
   const resetAll = () => {
     setFilterCriteria({});
@@ -44,12 +52,8 @@ export const Dashboard = () => {
     resetSorting();
   };
 
-  useEffect(() => {
-    console.log("Sorted patients after reset:", sortedPatients);
-  }, [sortedPatients]);
-
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message={error} />;
+  if (isLoading) return <LoadingSpinner />;
+  if (isError) return <ErrorMessage message={error?.message || 'An error occurred'} />;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -64,7 +68,7 @@ export const Dashboard = () => {
         <Header
           patientCount={sortedPatients.length}
           isConnected={isConnected}
-          lastUpdate={lastUpdate}
+          lastUpdate={dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : undefined}
         />
 
         <PatientSummary patients={sortedPatients} />

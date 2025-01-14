@@ -34,16 +34,15 @@ const patientSlice = createSlice({
       state.loading = false;
     },
     updatePatient(state, action: PayloadAction<WebSocketMessage>) {
-        const { patientId, vitals } = action.payload;
-        const patient = state.patients.find((p) => p.id === patientId);
-        if (patient) {
-          patient.vitals = { ...patient.vitals, ...vitals };
-          patient.isUpdated = true; // Set isUpdated to true
-          state.updatedPatientId = patientId;
-          state.lastUpdate = new Date().toISOString();
-        }
-      },
-
+      const { patientId, vitals } = action.payload;
+      const patient = state.patients.find((p) => p.id === patientId);
+      if (patient) {
+        patient.vitals = { ...patient.vitals, ...vitals };
+        patient.isUpdated = true;
+      }
+      state.updatedPatientId = patientId;
+      state.lastUpdate = new Date().toISOString();
+    },
     clearUpdateHighlight(state) {
       state.updatedPatientId = undefined;
       state.patients.forEach((patient) => {
