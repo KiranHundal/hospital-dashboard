@@ -1,37 +1,29 @@
-import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Patient } from '../../types/patient';
 import { PatientRow } from './PatientRow';
+import { useSorting } from '../../hooks/useSorting';
+import { usePagination } from '../../hooks/usePagination';
 
-type SortField = 'id' | 'name' | 'room' | 'age' | 'gender' | 'vitals';
-type SortDirection = 'asc' | 'desc';
-
-interface SortConfig {
-  field: SortField;
-  direction: SortDirection;
-}
 
 interface PatientTableProps {
   patients: Patient[];
   updatedPatientId?: string;
+  rowsPerPage?: number;
+
 }
 
-export const PatientTable = ({ patients, updatedPatientId }: PatientTableProps) => {
-  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+export const PatientTable = ({ patients, updatedPatientId, rowsPerPage = 10  }: PatientTableProps) => {
+  const { sortedData: sortedPatients, sortConfig, handleSort } = useSorting<Patient>(patients, 'id');
+  const {
+    paginatedData: paginatedPatients,
+    currentPage,
+    totalPages,
+    goToNextPage,
+    goToPreviousPage,
+  } = usePagination(sortedPatients, rowsPerPage);
 
-  const handleSort = (field: SortField) => {
-    setSortConfig(current => {
-      if (current?.field === field) {
-        return {
-          field,
-          direction: current.direction === 'asc' ? 'desc' : 'asc'
-        };
-      }
-      return { field, direction: 'asc' };
-    });
-  };
 
-  const SortIndicator = ({ field }: { field: SortField }) => {
+  const SortIndicator = ({ field }: { field: keyof Patient }) => {
     if (sortConfig?.field !== field) return null;
 
     return sortConfig.direction === 'asc' ?
@@ -39,35 +31,9 @@ export const PatientTable = ({ patients, updatedPatientId }: PatientTableProps) 
       <ChevronDown className="w-4 h-4 inline-block ml-1" />;
   };
 
-  const sortedPatients = useMemo(() => {
-    if (!sortConfig) return patients;
 
-    return [...patients].sort((a, b) => {
-      const { field, direction } = sortConfig;
-      const multiplier = direction === 'asc' ? 1 : -1;
 
-      switch (field) {
-        case 'id':
-        case 'name':
-        case 'room':
-        case 'gender':
-          return multiplier * a[field].localeCompare(b[field]);
-
-        case 'age':
-          return multiplier * (a.age - b.age);
-
-        case 'vitals':
-          { const [aSystolic] = a.vitals.bloodPressure.split('/').map(Number);
-          const [bSystolic] = b.vitals.bloodPressure.split('/').map(Number);
-          return multiplier * (aSystolic - bSystolic); }
-
-        default:
-          return 0;
-      }
-    });
-  }, [patients, sortConfig]);
-
-  const TableHeader = ({ field, children }: { field: SortField, children: React.ReactNode }) => (
+  const TableHeader = ({ field, children }: { field: keyof Patient, children: React.ReactNode }) => (
     <th
       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
       onClick={() => handleSort(field)}
@@ -93,15 +59,35 @@ export const PatientTable = ({ patients, updatedPatientId }: PatientTableProps) 
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {sortedPatients.map((patient) => (
+          {paginatedPatients.map((patient) => (
             <PatientRow
-            key={patient.id}
-            patient={patient}
-            isUpdated={patient.id === updatedPatientId}
-          />
+              key={patient.id}
+              patient={patient}
+              isUpdated={patient.id === updatedPatientId}
+            />
           ))}
         </tbody>
       </table>
+
+      <div className="flex justify-between items-center p-4 bg-gray-50">
+        <button
+          onClick={goToPreviousPage}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={goToNextPage}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
     </div>
   );
 };

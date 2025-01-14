@@ -13,13 +13,17 @@ export const analyzeVitals = (vitals: VitalSigns) => {
 
   const isO2Low = vitals.oxygenLevel < VITAL_THRESHOLDS.OXYGEN_LEVEL.LOW;
 
-  let severityScore = 0;
-  if (isBPHigh) severityScore += 2;
-  if (isBPLow) severityScore += 2;
-  if (isHRHigh) severityScore += 1;
-  if (isHRLow) severityScore += 1;
-  if (isO2Low) severityScore += 3;
+  const bpSeverity = (isBPHigh || isBPLow) ? 2 : 0;
+  const hrSeverity = (isHRHigh || isHRLow) ? 1 : 0;
+  const o2Severity = isO2Low ? 3 : 0;
 
+  const severityScore = bpSeverity + hrSeverity + o2Severity;
+
+  const getHighestSeverity = () => {
+    if (o2Severity > bpSeverity && o2Severity > hrSeverity) return 'oxygenLevel';
+    if (bpSeverity > hrSeverity) return 'bloodPressure';
+    return 'heartRate';
+  };
   return {
     isBPHigh,
     isBPLow,
@@ -27,6 +31,10 @@ export const analyzeVitals = (vitals: VitalSigns) => {
     isHRLow,
     isO2Low,
     severityScore,
+    bpSeverity,
+    hrSeverity,
+    o2Severity,
+    getHighestSeverity,
     systolic,
     diastolic
   };

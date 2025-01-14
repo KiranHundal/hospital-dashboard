@@ -1,4 +1,3 @@
-// src/components/patient/PatientRow.tsx
 import { Patient } from '../../types/patient';
 import { analyzeVitals } from '../../utils/vitalUtils';
 
