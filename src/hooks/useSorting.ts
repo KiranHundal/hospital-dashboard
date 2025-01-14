@@ -58,6 +58,10 @@ export const useSorting = <T extends { vitals?: VitalSigns }>(
       return { field, direction: 'asc' };
     });
   };
+  const resetSorting = () => {
+    console.log("Resetting sorting...");
 
-  return { sortedData, sortConfig, handleSort };
+    setSortConfig(null);
+  };
+  return { sortedData, sortConfig, handleSort, resetSorting };
 };

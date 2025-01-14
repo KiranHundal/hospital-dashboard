@@ -1,42 +1,45 @@
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Patient } from '../../types/patient';
-import { PatientRow } from './PatientRow';
-import { useSorting } from '../../hooks/useSorting';
-import { usePagination } from '../../hooks/usePagination';
-
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Patient } from "../../types/patient";
+import { PatientRow } from "./PatientRow";
+import { usePagination } from "../../hooks/usePagination";
 
 interface PatientTableProps {
   patients: Patient[];
   updatedPatientId?: string;
   rowsPerPage?: number;
-
+  onSort: (field: keyof Patient) => void;
+  sortConfig: { field: keyof Patient; direction: "asc" | "desc" } | null;
 }
 
-export const PatientTable = ({ patients, updatedPatientId, rowsPerPage = 10  }: PatientTableProps) => {
-  const { sortedData: sortedPatients, sortConfig, handleSort } = useSorting<Patient>(patients, 'id');
+export const PatientTable = ({
+  patients,
+  updatedPatientId,
+  rowsPerPage = 10,
+  onSort,
+  sortConfig,
+}: PatientTableProps) => {
   const {
     paginatedData: paginatedPatients,
     currentPage,
     totalPages,
     goToNextPage,
     goToPreviousPage,
-  } = usePagination(sortedPatients, rowsPerPage);
-
+  } = usePagination(patients, rowsPerPage);
 
   const SortIndicator = ({ field }: { field: keyof Patient }) => {
     if (sortConfig?.field !== field) return null;
 
-    return sortConfig.direction === 'asc' ?
-      <ChevronUp className="w-4 h-4 inline-block ml-1" /> :
-      <ChevronDown className="w-4 h-4 inline-block ml-1" />;
+    return sortConfig.direction === "asc" ? (
+      <ChevronUp className="w-4 h-4 inline-block ml-1" />
+    ) : (
+      <ChevronDown className="w-4 h-4 inline-block ml-1" />
+    );
   };
 
-
-
-  const TableHeader = ({ field, children }: { field: keyof Patient, children: React.ReactNode }) => (
+  const TableHeader = ({ field, children }: { field: keyof Patient; children: React.ReactNode }) => (
     <th
       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-      onClick={() => handleSort(field)}
+      onClick={() => onSort(field)}
     >
       <div className="flex items-center">
         {children}
