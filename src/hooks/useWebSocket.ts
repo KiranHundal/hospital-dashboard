@@ -8,7 +8,6 @@ import {
   updatePatient,
   clearUpdateHighlight,
 } from "../store/slices/patientSlice";
-// import { PatientService } from '../services/patientService';
 import { QUERY_KEYS } from "./queries";
 
 export const useWebSocket = () => {
@@ -28,7 +27,7 @@ export const useWebSocket = () => {
 
         queryClient.setQueryData(QUERY_KEYS.patients, (oldData: any) => {
           if (!Array.isArray(oldData)) return oldData;
-          return oldData.map((patient) =>
+          const updatedPatients = oldData.map((patient) =>
             patient.id === message.patientId
               ? {
                   ...patient,
@@ -37,17 +36,29 @@ export const useWebSocket = () => {
                 }
               : patient
           );
+          console.log("Saving patients to localStorage:", updatedPatients);
+
+          localStorage.setItem("patients", JSON.stringify(updatedPatients));
+
+          return updatedPatients;
         });
 
         queryClient.setQueryData(
           QUERY_KEYS.patient(message.patientId),
           (oldData: any) => {
             if (!oldData) return oldData;
-            return {
+            const updatedPatient = {
               ...oldData,
               vitals: { ...oldData.vitals, ...message.vitals },
               isUpdated: true,
             };
+
+            localStorage.setItem(
+              `patient-${message.patientId}`,
+              JSON.stringify(updatedPatient)
+            );
+
+            return updatedPatient;
           }
         );
 
@@ -56,11 +67,15 @@ export const useWebSocket = () => {
 
           queryClient.setQueryData(QUERY_KEYS.patients, (oldData: any) => {
             if (!Array.isArray(oldData)) return oldData;
-            return oldData.map((patient) =>
+            const clearedPatients = oldData.map((patient) =>
               patient.id === message.patientId
                 ? { ...patient, isUpdated: false }
                 : patient
             );
+
+            localStorage.setItem("patients", JSON.stringify(clearedPatients));
+
+            return clearedPatients;
           });
         }, 2000);
       } catch (err) {
@@ -70,6 +85,7 @@ export const useWebSocket = () => {
     },
     [dispatch, queryClient]
   );
+
 
   const connect = useCallback(() => {
     const ws = new WebSocket(CONFIG.WEBSOCKET_URL);

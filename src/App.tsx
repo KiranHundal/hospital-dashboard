@@ -1,21 +1,16 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Provider } from 'react-redux';
-import { store } from './store';
-import { Dashboard } from './components/layout/Dashboard';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 30,
-    },
-  },
-});
+import React from "react";
+import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Provider } from "react-redux";
+import { store } from "./store";
+import { Dashboard } from "./components/layout/Dashboard";
+import { useHydrateCache } from "./hooks/useHydrateCache";
+import queryClient from "./utils/QueryClient";
 
 const AppContent = () => {
+  const queryClient = useQueryClient();
+  useHydrateCache(queryClient);
+
   return <Dashboard />;
 };
 

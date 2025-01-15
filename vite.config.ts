@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [
     react(),
     generateFile({
-      output: 'build-meta.json', 
+      output: 'build-meta.json',
       type: 'json',
       data: {
         version: APP_VERSION,
@@ -19,4 +19,7 @@ export default defineConfig({
     }),
     qrcode(),
   ],
+  server: {
+    host: true, 
+  },
 });
