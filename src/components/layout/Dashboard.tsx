@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback} from "react";
 import { useAppSelector } from "../../hooks/redux";
 import { selectUpdatedPatientId, selectWebSocketState } from "../../store/selectors/patientSelectors";
 import { Header } from "./Header";
@@ -10,9 +10,51 @@ import { usePatientFilter } from "../../hooks/usePatientFilter";
 import { useSearch } from "../../hooks/useSearch";
 import { PatientFilterPanel } from "../patient/PatientFilterPanel";
 import { SearchAndFilterBar } from "../ui/SearchAndFilterBar";
-import { useSorting } from "../../hooks/useSorting";
 import { usePatients } from "../../hooks/queries";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { withLoading } from "../../hocs/withLoading";
+import { SortableData } from "../shared/SortableData";
+import { Patient } from "../../types/patient";
+
+const PatientTableWithLoading = withLoading(PatientTable);
+const PatientSummaryWithLoading = withLoading(PatientSummary);
+
+const SortedPatientTable = ({
+  patients,
+  updatedPatientId,
+  isLoading,
+  error,
+  onResetSortChange
+}: {
+  patients: Patient[];
+  updatedPatientId?: string;
+  isLoading: boolean;
+  error: Error | null;
+  onResetSortChange: (resetSort: () => void) => void;
+}) => {
+  return (
+    <SortableData
+      data={patients}
+      defaultSortField="id"
+      defaultSortDirection="asc"
+    >
+      {({ sortedData, sortConfig, handleSort, resetSort }) => {
+        onResetSortChange(resetSort);
+
+        return (
+          <PatientTableWithLoading
+            patients={sortedData}
+            updatedPatientId={updatedPatientId}
+            onSort={handleSort}
+            sortConfig={sortConfig}
+            isLoading={isLoading}
+            error={error}
+          />
+        );
+      }}
+    </SortableData>
+  );
+};
 
 export const Dashboard = () => {
   useWebSocket();
@@ -29,6 +71,8 @@ export const Dashboard = () => {
   } = usePatients();
 
   const [isFilterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [currentResetSort, setCurrentResetSort] = useState<(() => void) | null>(null);
+
   const { filteredPatients, setFilterCriteria } = usePatientFilter(patients);
   const {
     searchTerm,
@@ -37,23 +81,22 @@ export const Dashboard = () => {
     filteredPatients: searchedPatients,
   } = useSearch(filteredPatients);
 
-  const {
-    sortedData: sortedPatients,
-    sortConfig,
-    handleSort,
-    resetSorting
-  } = useSorting(searchedPatients, "id");
+  const handleResetSortChange = useCallback((resetSort: () => void) => {
+    setCurrentResetSort(() => resetSort);
+  }, []);
 
-  const resetAll = () => {
+  const resetAll = useCallback(() => {
     setFilterCriteria({});
     setSearchTerm("");
     setExactSearchTerm("");
     setFilterPanelOpen(false);
-    resetSorting();
-  };
+    if (currentResetSort) {
+      currentResetSort();
+    }
+  }, [setFilterCriteria, setSearchTerm, setExactSearchTerm, currentResetSort]);
 
   if (isLoading) return <LoadingSpinner />;
-  if (isError) return <ErrorMessage message={error?.message || 'An error occurred'} />;
+  if (isError && error) return <ErrorMessage message={error.message} />;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -66,12 +109,16 @@ export const Dashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Header
-          patientCount={sortedPatients.length}
+          patientCount={searchedPatients.length}
           isConnected={isConnected}
           lastUpdate={dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : undefined}
         />
 
-        <PatientSummary patients={sortedPatients} />
+        <PatientSummaryWithLoading
+          patients={searchedPatients}
+          isLoading={isLoading}
+          error={error}
+        />
 
         <SearchAndFilterBar
           searchTerm={searchTerm}
@@ -79,14 +126,14 @@ export const Dashboard = () => {
           onSearch={() => setExactSearchTerm(searchTerm.trim())}
           onReset={resetAll}
           onFilter={() => setFilterPanelOpen(true)}
-          onResetSorting={resetSorting}
         />
 
-        <PatientTable
-          patients={sortedPatients}
+        <SortedPatientTable
+          patients={searchedPatients}
           updatedPatientId={updatedPatientId}
-          onSort={handleSort}
-          sortConfig={sortConfig}
+          isLoading={isLoading}
+          error={error}
+          onResetSortChange={handleResetSortChange}
         />
       </div>
     </div>

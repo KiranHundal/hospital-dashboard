@@ -6,7 +6,7 @@ interface SearchAndFilterBarProps {
   onSearch: () => void;
   onReset: () => void;
   onFilter: () => void;
-  onResetSorting: () => void;
+  onResetSorting?: () => void;
 
 }
 
@@ -16,7 +16,6 @@ export const SearchAndFilterBar = ({
   onSearch,
   onReset,
   onFilter,
-  onResetSorting,
 
 }: SearchAndFilterBarProps) => (
   <div className="flex justify-between items-center mb-4">
@@ -39,7 +38,6 @@ export const SearchAndFilterBar = ({
     <button
         onClick={() => {
           onReset();
-          onResetSorting();
         }}
         className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
       >

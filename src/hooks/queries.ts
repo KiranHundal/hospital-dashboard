@@ -6,9 +6,12 @@ export const QUERY_KEYS = {
   patients: ['patients'],
   patient: (id: string) => ['patient', id],
 };
+interface Error {
+    message: string;
+  }
 
-export const usePatients = () => {
-    return useQuery({
+  export const usePatients = () => {
+    return useQuery<Patient[], Error>({
       queryKey: QUERY_KEYS.patients,
       queryFn: async () => {
         const patientService = PatientService.getInstance();
@@ -24,7 +27,6 @@ export const usePatients = () => {
       },
     });
   };
-
 
 export const usePatient = (patientId: string) => {
   return useQuery({
