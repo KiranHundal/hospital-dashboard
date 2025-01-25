@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Patient } from '../types/patient';
-import { VITAL_THRESHOLDS } from '../config/constants';
+import VitalSignsService from '../services/VitalSignsService';
 
 export interface PatientStats {
   totalPatients: number;
@@ -20,6 +20,8 @@ export interface PatientStats {
 
 export const usePatientStats = (patients: Patient[]): PatientStats => {
   return useMemo(() => {
+    const vitalService = VitalSignsService.getInstance();
+
     const stats: PatientStats = {
       totalPatients: patients.length,
       genderDistribution: {
@@ -42,30 +44,13 @@ export const usePatientStats = (patients: Patient[]): PatientStats => {
       );
 
       patients.forEach(patient => {
-        const [systolic, diastolic] = patient.vitals.bloodPressure
-          .split('/')
-          .map(Number);
+        const vitalStatus = vitalService.analyzeVitals(patient.vitals);
 
-        if (systolic > VITAL_THRESHOLDS.BLOOD_PRESSURE.SYSTOLIC.HIGH ||
-            diastolic > VITAL_THRESHOLDS.BLOOD_PRESSURE.DIASTOLIC.HIGH) {
-          stats.criticalPatients.highBP++;
-        }
-
-        if (systolic < VITAL_THRESHOLDS.BLOOD_PRESSURE.SYSTOLIC.LOW ||
-            diastolic < VITAL_THRESHOLDS.BLOOD_PRESSURE.DIASTOLIC.LOW) {
-          stats.criticalPatients.lowBP++;
-        }
-
-        if (patient.vitals.oxygenLevel < VITAL_THRESHOLDS.OXYGEN_LEVEL.LOW) {
-          stats.criticalPatients.lowO2++;
-        }
-
-        if (patient.vitals.heartRate > VITAL_THRESHOLDS.HEART_RATE.HIGH) {
-          stats.criticalPatients.highHR++;
-        }
-        if (patient.vitals.heartRate < VITAL_THRESHOLDS.HEART_RATE.LOW) {
-          stats.criticalPatients.lowHR++;
-        }
+        if (vitalStatus.isBPHigh) stats.criticalPatients.highBP++;
+        if (vitalStatus.isBPLow) stats.criticalPatients.lowBP++;
+        if (vitalStatus.isO2Low) stats.criticalPatients.lowO2++;
+        if (vitalStatus.isHRHigh) stats.criticalPatients.highHR++;
+        if (vitalStatus.isHRLow) stats.criticalPatients.lowHR++;
       });
     }
 

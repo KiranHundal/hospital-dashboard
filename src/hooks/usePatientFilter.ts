@@ -1,17 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { applyFilters, FilterCriteria } from '../utils/filterUtils';
 import { Patient } from '../types/patient';
-
-const FILTER_KEY = 'user_filter_criteria';
+import { StorageService } from '../services/StorageService';
 
 export const usePatientFilter = (patients: Patient[]) => {
-  const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>(() => {
-    const savedCriteria = localStorage.getItem(FILTER_KEY);
-    return savedCriteria ? JSON.parse(savedCriteria) : {};
-  });
+  const storage = StorageService.getInstance();
+
+  const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>(() =>
+    storage.getFilterCriteria() || {}
+  );
 
   useEffect(() => {
-    localStorage.setItem(FILTER_KEY, JSON.stringify(filterCriteria));
+    storage.saveFilterCriteria(filterCriteria);
   }, [filterCriteria]);
 
   const filteredPatients = useMemo(() => {
@@ -20,7 +20,7 @@ export const usePatientFilter = (patients: Patient[]) => {
 
   const resetFilters = () => {
     setFilterCriteria({});
-    localStorage.removeItem(FILTER_KEY);
+    storage.saveFilterCriteria({});
   };
 
   return { filteredPatients, filterCriteria, setFilterCriteria, resetFilters };

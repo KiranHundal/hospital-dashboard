@@ -1,8 +1,11 @@
+// components/shared/SortableData.tsx
 import React from 'react';
 import { Patient } from '../../types/patient';
 import { analyzeVitals } from '../../utils/vitalUtils';
+import { StorageService } from '../../services/StorageService';
+import VitalSignsService from '../../services/VitalSignsService';
 
-interface SortConfig<T> {
+export interface SortConfig<T> {
   field: keyof T;
   direction: 'asc' | 'desc';
 }
@@ -21,41 +24,60 @@ interface SortableDataProps<T> {
 
 interface SortableDataState<T> {
   sortConfig: SortConfig<T> | null;
-  defaultConfig: SortConfig<T> | null;
 }
 
 export class SortableData<T extends Record<string, any>> extends React.Component<
   SortableDataProps<T>,
   SortableDataState<T>
 > {
+  private storage: StorageService;
+  private vitalService: VitalSignsService;
+
   constructor(props: SortableDataProps<T>) {
     super(props);
-    const defaultConfig = props.defaultSortField ? {
-      field: props.defaultSortField,
-      direction: props.defaultSortDirection || 'asc'
-    } : null;
+    this.storage = StorageService.getInstance();
+    this.vitalService = VitalSignsService.getInstance();
 
+
+    // Initialize state with stored sort config or default
+    const savedConfig = this.storage.getSortConfig() as SortConfig<T> | null;
     this.state = {
-      sortConfig: defaultConfig,
-      defaultConfig
+      sortConfig: savedConfig || (props.defaultSortField
+        ? {
+            field: props.defaultSortField,
+            direction: props.defaultSortDirection || 'asc',
+          }
+        : null),
     };
   }
 
   handleSort = (field: keyof T) => {
-    this.setState((prevState: SortableDataState<T>) => ({
-      sortConfig: {
+    this.setState((prevState) => {
+      const newConfig: SortConfig<T> = {
         field,
         direction:
-          prevState.sortConfig?.field === field &&
-          prevState.sortConfig.direction === 'asc'
+          prevState.sortConfig?.field === field && prevState.sortConfig.direction === 'asc'
             ? 'desc'
-            : 'asc'
-      }
-    }));
+            : 'asc',
+      };
+      this.storage.saveSortConfig(newConfig);
+      return { sortConfig: newConfig };
+    });
   };
 
   resetSort = () => {
-    this.setState({ sortConfig: this.state.defaultConfig });
+    const { defaultSortField, defaultSortDirection } = this.props;
+    const newConfig: SortConfig<T> | null = defaultSortField
+      ? {
+          field: defaultSortField,
+          direction: defaultSortDirection || 'asc',
+        }
+      : null;
+
+    this.setState({ sortConfig: newConfig });
+    if (newConfig) {
+      this.storage.saveSortConfig(newConfig);
+    }
   };
 
   getSortedData = () => {
@@ -64,36 +86,33 @@ export class SortableData<T extends Record<string, any>> extends React.Component
 
     if (!sortConfig) return data;
 
+
     return [...data].sort((a, b) => {
-      if (this.isPatientData(a) && this.isPatientData(b) && sortConfig.field === 'vitals') {
-        const aStatus = analyzeVitals(a.vitals);
-        const bStatus = analyzeVitals(b.vitals);
-        return sortConfig.direction === 'asc'
-          ? aStatus.severityScore - bStatus.severityScore
-          : bStatus.severityScore - aStatus.severityScore;
-      }
+        if (this.isPatientData(a) && this.isPatientData(b) && sortConfig.field === 'vitals') {
+          const aStatus = this.vitalService.analyzeVitals(a.vitals);
+          const bStatus = this.vitalService.analyzeVitals(b.vitals);
+          return sortConfig.direction === 'asc'
+            ? bStatus.severityScore - aStatus.severityScore
+            : aStatus.severityScore - bStatus.severityScore;
+        }
 
       const aValue = a[sortConfig.field];
       const bValue = b[sortConfig.field];
 
+      const multiplier = sortConfig.direction === 'asc' ? 1 : -1;
+
       if (sortConfig.field === 'id' && typeof aValue === 'string' && typeof bValue === 'string') {
         const aNum = parseInt(aValue.replace(/\D/g, ''));
         const bNum = parseInt(bValue.replace(/\D/g, ''));
-        return sortConfig.direction === 'asc'
-          ? aNum - bNum
-          : bNum - aNum;
+        return multiplier * (aNum - bNum);
       }
 
       if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortConfig.direction === 'asc'
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+        return multiplier * aValue.localeCompare(bValue);
       }
 
       if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortConfig.direction === 'asc'
-          ? aValue - bValue
-          : bValue - aValue;
+        return multiplier * (aValue - bValue);
       }
 
       return 0;
@@ -101,7 +120,13 @@ export class SortableData<T extends Record<string, any>> extends React.Component
   };
 
   private isPatientData(item: any): item is Patient {
-    return item && 'vitals' in item;
+    return (
+      item &&
+      typeof item === 'object' &&
+      'vitals' in item &&
+      typeof item.vitals === 'object' &&
+      'oxygenLevel' in item.vitals
+    );
   }
 
   render() {
@@ -109,7 +134,7 @@ export class SortableData<T extends Record<string, any>> extends React.Component
       sortedData: this.getSortedData(),
       sortConfig: this.state.sortConfig,
       handleSort: this.handleSort,
-      resetSort: this.resetSort
+      resetSort: this.resetSort,
     });
   }
 }

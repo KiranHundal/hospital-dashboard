@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FilterCriteria } from '../../utils/filterUtils';
+import { useState } from "react";
+import { FilterCriteria } from "../../utils/filterUtils";
 
 interface PatientFilterPanelProps {
   onClose: () => void;
@@ -10,13 +10,14 @@ export const PatientFilterPanel = ({
   onClose,
   onFilterChange,
 }: PatientFilterPanelProps) => {
-  const [name, setName] = useState('');
-  const [ageRange, setAgeRange] = useState<[number | undefined, number | undefined]>([
-    undefined,
-    undefined,
-  ]);
-  const [gender, setGender] = useState<'male' | 'female' | 'other' | undefined>();
-  const [room, setRoom] = useState('');
+  const [name, setName] = useState("");
+  const [ageRange, setAgeRange] = useState<
+    [number | undefined, number | undefined]
+  >([undefined, undefined]);
+  const [gender, setGender] = useState<
+    "male" | "female" | "other" | undefined
+  >();
+  const [room, setRoom] = useState("");
   const [criticalVitals, setCriticalVitals] = useState({
     highBP: false,
     lowOxygen: false,
@@ -25,8 +26,9 @@ export const PatientFilterPanel = ({
   const [recentUpdates, setRecentUpdates] = useState(false);
 
   const handleApplyFilters = () => {
-    const formattedAgeRange =
-      ageRange.every((val) => val !== undefined) ? (ageRange as [number, number]) : undefined;
+    const formattedAgeRange = ageRange.every((val) => val !== undefined)
+      ? (ageRange as [number, number])
+      : undefined;
 
     onFilterChange({
       name,
@@ -68,8 +70,14 @@ export const PatientFilterPanel = ({
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Name
+          </label>
           <input
+            id="name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -78,13 +86,22 @@ export const PatientFilterPanel = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Age Range</label>
+          <label
+            htmlFor="ageRangeMin"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Age Range
+          </label>
           <div className="flex space-x-2">
             <input
+              id="ageRangeMin"
               type="number"
               placeholder="Min"
               onChange={(e) =>
-                setAgeRange((prev) => [parseInt(e.target.value) || undefined, prev[1]])
+                setAgeRange((prev) => [
+                  parseInt(e.target.value) || undefined,
+                  prev[1],
+                ])
               }
               className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
@@ -92,7 +109,10 @@ export const PatientFilterPanel = ({
               type="number"
               placeholder="Max"
               onChange={(e) =>
-                setAgeRange((prev) => [prev[0], parseInt(e.target.value) || undefined])
+                setAgeRange((prev) => [
+                  prev[0],
+                  parseInt(e.target.value) || undefined,
+                ])
               }
               className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
@@ -100,10 +120,18 @@ export const PatientFilterPanel = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+          <label
+            htmlFor="gender"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Gender
+          </label>
           <select
+            id="gender"
             value={gender}
-            onChange={(e) => setGender(e.target.value as 'male' | 'female' | 'other')}
+            onChange={(e) =>
+              setGender(e.target.value as "male" | "female" | "other")
+            }
             className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
             <option value="">All</option>
@@ -114,8 +142,14 @@ export const PatientFilterPanel = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
+          <label
+            htmlFor="room"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Room
+          </label>
           <input
+            id="room"
             type="text"
             value={room}
             onChange={(e) => setRoom(e.target.value)}
@@ -128,10 +162,11 @@ export const PatientFilterPanel = ({
             Critical Vitals
           </label>
           <div className="space-y-2">
-            {['High Blood Pressure', 'Low Oxygen', 'Abnormal Heart Rate'].map(
+            {["High Blood Pressure", "Low Oxygen", "Abnormal Heart Rate"].map(
               (label, index) => (
                 <div key={label} className="flex items-center space-x-2">
                   <input
+                    id={`critical-vital-${index}`}
                     type="checkbox"
                     checked={Object.values(criticalVitals)[index]}
                     onChange={() =>
@@ -143,7 +178,12 @@ export const PatientFilterPanel = ({
                     }
                     className="rounded focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-gray-700">{label}</span>
+                  <label
+                    htmlFor={`critical-vital-${index}`}
+                    className="text-gray-700"
+                  >
+                    {label}
+                  </label>
                 </div>
               )
             )}
@@ -151,7 +191,7 @@ export const PatientFilterPanel = ({
         </div>
 
         <div>
-          <div className="flex items-center space-x-2">
+          <label className="flex items-center space-x-2">
             <input
               type="checkbox"
               checked={recentUpdates}
@@ -159,7 +199,7 @@ export const PatientFilterPanel = ({
               className="rounded focus:ring-2 focus:ring-blue-500"
             />
             <span className="text-gray-700">Recent Updates</span>
-          </div>
+          </label>
         </div>
 
         <button

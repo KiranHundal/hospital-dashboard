@@ -1,5 +1,5 @@
-import { Patient } from '../../types/patient';
-import { analyzeVitals } from '../../utils/vitalUtils';
+import { Patient } from "../../types/patient";
+import { useVitalSigns } from "../../hooks/useVitalSigns";
 
 interface PatientRowProps {
   patient: Patient;
@@ -7,14 +7,14 @@ interface PatientRowProps {
 }
 
 export const PatientRow = ({ patient, isUpdated }: PatientRowProps) => {
-  const vitalsStatus = analyzeVitals(patient.vitals);
-  const isCritical = vitalsStatus.severityScore > 0;
+  const vitalStatus = useVitalSigns(patient.vitals);
+  const isCritical = vitalStatus.severityScore > 0;
 
   return (
     <tr
       className={`
-        ${isUpdated ? 'bg-blue-50' : ''}
-        ${isCritical ? 'relative bg-red-50' : ''}
+        ${isUpdated ? "bg-blue-50" : ""}
+        ${isCritical ? "relative bg-red-50" : ""}
         transition-colors duration-500
       `}
     >
@@ -41,13 +41,29 @@ export const PatientRow = ({ patient, isUpdated }: PatientRowProps) => {
         {patient.gender}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm">
-        <div className={`${vitalsStatus.isBPHigh || vitalsStatus.isBPLow ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+        <div
+          className={`${
+            vitalStatus.isBPHigh || vitalStatus.isBPLow
+              ? "text-red-600 font-medium"
+              : "text-gray-500"
+          }`}
+        >
           BP: {patient.vitals.bloodPressure}
         </div>
-        <div className={`${vitalsStatus.isHRHigh || vitalsStatus.isHRLow ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+        <div
+          className={`${
+            vitalStatus.isHRHigh || vitalStatus.isHRLow
+              ? "text-red-600 font-medium"
+              : "text-gray-500"
+          }`}
+        >
           HR: {patient.vitals.heartRate} bpm
         </div>
-        <div className={`${vitalsStatus.isO2Low ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+        <div
+          className={`${
+            vitalStatus.isO2Low ? "text-red-600 font-medium" : "text-gray-500"
+          }`}
+        >
           O₂: {patient.vitals.oxygenLevel}%
         </div>
       </td>

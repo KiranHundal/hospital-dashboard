@@ -11,10 +11,10 @@ import { useSearch } from "../../hooks/useSearch";
 import { PatientFilterPanel } from "../patient/PatientFilterPanel";
 import { SearchAndFilterBar } from "../ui/SearchAndFilterBar";
 import { usePatients } from "../../hooks/queries";
-import { useWebSocket } from "../../hooks/useWebSocket";
 import { withLoading } from "../../hocs/withLoading";
 import { SortableData } from "../shared/SortableData";
 import { Patient } from "../../types/patient";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 const PatientTableWithLoading = withLoading(PatientTable);
 const PatientSummaryWithLoading = withLoading(PatientSummary);

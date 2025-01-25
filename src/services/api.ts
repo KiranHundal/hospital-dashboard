@@ -1,5 +1,6 @@
-import { CONFIG } from '../config/constants';
 import { APIError } from '../types/errors';
+import { ConfigService } from './ConfigService';
+const { API_URL } = ConfigService.getInstance().getConfig();
 
 export interface Post {
   userId: number;
@@ -17,7 +18,7 @@ interface APIResponse<T> {
 export const apiService = {
   async fetchPosts(): Promise<APIResponse<Post[]>> {
     try {
-      const response = await fetch(CONFIG.API_URL);
+      const response = await fetch(API_URL);
       const statusCode = response.status;
 
       if (!response.ok) {

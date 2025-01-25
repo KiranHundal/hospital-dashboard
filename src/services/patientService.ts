@@ -2,6 +2,7 @@ import { Patient } from '../types/patient';
 import { apiService } from './api';
 import { patientAdapter } from './patientAdapter';
 import { APIError, TransformationError, ValidationError } from '../types/errors';
+import { StorageService } from './StorageService';
 
 interface PatientServiceResponse {
   patients: Patient[];
@@ -11,8 +12,11 @@ interface PatientServiceResponse {
 
 export class PatientService {
   private static instance: PatientService;
+  private storage: StorageService;
 
-  private constructor() {}
+  private constructor() {
+    this.storage = StorageService.getInstance();
+  }
 
   static getInstance(): PatientService {
     if (!PatientService.instance) {
@@ -23,15 +27,14 @@ export class PatientService {
 
   async fetchPatients(): Promise<PatientServiceResponse> {
     try {
-        const cachedData = this.getCachedPatients();
-        if (cachedData) {
-          console.log('Using cached data');
-          return {
-            patients: cachedData,
-            totalCount: cachedData.length
-          };
-        }
-
+      const cachedData = this.storage.getPatients();
+      if (cachedData.length > 0) {
+        console.log('Using cached data');
+        return {
+          patients: cachedData,
+          totalCount: cachedData.length
+        };
+      }
 
       const { data: posts, statusCode } = await apiService.fetchPosts();
       console.log(`Fetched ${posts.length} posts with status ${statusCode}`);
@@ -47,8 +50,7 @@ export class PatientService {
       }, []);
 
       patients.sort((a, b) => a.id.localeCompare(b.id));
-      this.persistPatientsToCache(patients);
-
+      this.storage.savePatients(patients);
 
       return {
         patients,
@@ -79,55 +81,24 @@ export class PatientService {
 
   async getPatientById(patientId: string): Promise<Patient | null> {
     try {
+      const cachedPatient = this.storage.getPatient(patientId);
+      if (cachedPatient) {
+        return cachedPatient;
+      }
+
       const { patients } = await this.fetchPatients();
-      return patients.find(patient => patient.id === patientId) || null;
+      const patient = patients.find(p => p.id === patientId) || null;
+      if (patient) {
+        this.storage.savePatient(patient);
+      }
+      return patient;
     } catch (error) {
       console.error(`Error fetching patient ${patientId}:`, error);
       return null;
     }
   }
 
-  persistPatientsToCache(patients: Patient[]): void {
-    try {
-      localStorage.setItem('patientData', JSON.stringify(patients));
-      localStorage.setItem('lastUpdate', new Date().toISOString());
-    } catch (error) {
-      console.error('Error persisting patients to cache:', error);
-    }
-  }
-
-  getCachedPatients(): Patient[] | null {
-    try {
-      const cached = localStorage.getItem('patientData');
-      return cached ? JSON.parse(cached) : null;
-    } catch (error) {
-      console.error('Error reading from cache:', error);
-      return null;
-    }
-  }
-
   updatePatientVitals(patientId: string, updatedVitals: Partial<Patient['vitals']>): Patient | null {
-    try {
-      const patients = this.getCachedPatients();
-      if (!patients) return null;
-
-      const updatedPatients = patients.map(patient => {
-        if (patient.id === patientId) {
-          return {
-            ...patient,
-            vitals: { ...patient.vitals, ...updatedVitals },
-            lastUpdated: new Date().toISOString() 
-
-          };
-        }
-        return patient;
-      });
-
-      this.persistPatientsToCache(updatedPatients);
-      return updatedPatients.find(p => p.id === patientId) || null;
-    } catch (error) {
-      console.error(`Error updating vitals for patient ${patientId}:`, error);
-      return null;
-    }
+    return this.storage.updatePatientVitals(patientId, updatedVitals);
   }
 }

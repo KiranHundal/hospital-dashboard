@@ -6,16 +6,17 @@ export interface VitalSigns {
 
   export interface Patient {
     id: string;
-    name: string;
+    name: string ;
     age: number;
     gender: "male" | "female" | "other";
-    room: string;
+    room: string ;
     vitals: {
       bloodPressure: string;
       oxygenLevel: number;
       heartRate: number;
     };
     isUpdated?: boolean;
+    [key: string]: unknown;
   }
 
 
@@ -25,6 +26,12 @@ export interface VitalSigns {
   }
 
 
+export enum Gender {
+  Male = 'male',
+  Female = 'female',
+  Other = 'other'
+}
+
   export interface WebSocketMessage {
     patientId: string;
     vitals: Partial<VitalSigns>;
@@ -32,7 +39,7 @@ export interface VitalSigns {
     isUpdated?: boolean;
 
   }
-  // export type WebSocketMessage = {
+  // export type WebSocketMessage1 = {
   //   type: 'UPDATE_VITALS' | 'NEW_PATIENT';
   // } & (
   //   | {
@@ -42,10 +49,6 @@ export interface VitalSigns {
   //     }
   //   | {
   //       type: 'NEW_PATIENT';
-  //       name: string;
-  //       age?: number;
-  //       room?: string;
-  //       gender?: 'male' | 'female';
-  //       vitals?: VitalSigns;
+  //       patient: Patient;
   //     }
   // );

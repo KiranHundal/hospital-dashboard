@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface WebSocketState {
+export interface WebSocketState {
   isConnected: boolean;
   error: string | null;
 }

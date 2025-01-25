@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Patient } from '../types/patient';
 
 export const useSearch = (patients: Patient[]) => {
@@ -11,23 +11,36 @@ export const useSearch = (patients: Patient[]) => {
     }
   }, [searchTerm, exactSearchTerm]);
 
-  const filteredPatients = patients.filter((patient) => {
-    const match = (value: string | number | undefined) =>
-      exactSearchTerm
-        ? value?.toString().toLowerCase() === exactSearchTerm
-        : value?.toString().toLowerCase().includes(searchTerm);
+  const filteredPatients = useMemo(() => {
+    const searchValue = searchTerm.toLowerCase();
+    const exact = exactSearchTerm.toLowerCase();
 
-    return (
-      match(patient.id) ||
-      match(patient.name) ||
-      match(patient.room) ||
-      match(patient.gender) ||
-      match(patient.age) ||
-      match(patient.vitals.bloodPressure) ||
-      match(patient.vitals.oxygenLevel) ||
-      match(patient.vitals.heartRate)
-    );
-  });
+    return patients.filter((patient) => {
+      if (exact) {
+        return Object.values(patient).some(value =>
+          String(value).toLowerCase() === exact
+        ) || (
+          patient.vitals && Object.values(patient.vitals).some(value =>
+            String(value).toLowerCase() === exact
+          )
+        );
+      }
+
+      const match = (value: any) =>
+        String(value).toLowerCase().includes(searchValue);
+
+      return (
+        match(patient.id) ||
+        match(patient.name) ||
+        match(patient.room) ||
+        match(patient.gender) ||
+        match(patient.age) ||
+        match(patient.vitals.bloodPressure) ||
+        match(patient.vitals.heartRate) ||
+        match(patient.vitals.oxygenLevel)
+      );
+    });
+  }, [patients, searchTerm, exactSearchTerm]);
 
   return { searchTerm, setSearchTerm, setExactSearchTerm, filteredPatients };
 };

@@ -1,6 +1,4 @@
-export type SortDirection = 'asc' | 'desc';
-
-export interface SortConfig {
-  key: string;
-  direction: SortDirection;
+export interface SortConfig<T = unknown> {
+  field: keyof T;
+  direction: 'asc' | 'desc';
 }

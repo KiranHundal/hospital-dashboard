@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Patient, WebSocketMessage } from '../../types/patient';
 
-interface PatientState {
+export interface PatientState {
   patients: Patient[];
   loading: boolean;
   error: string | undefined;
@@ -9,7 +9,7 @@ interface PatientState {
   lastUpdate: string | undefined;
 }
 
-const initialState: PatientState = {
+export const initialState: PatientState = {
   patients: [],
   loading: false,
   error: undefined,
