@@ -5,7 +5,7 @@ import { WEBSOCKET_CONFIG } from '../config/constants';
 import { setConnected, setError, clearError } from '../store/slices/websocketSlice';
 import { updatePatient, clearUpdateHighlight } from '../store/slices/patientSlice';
 import { QUERY_KEYS } from '../hooks/queries';
-import { DischargePatient, NewPatient, PatientUpdate, RoomUpdate, SubscriptionTopic, WebSocketMessage } from '../types/websocket';
+import { BatchAdmissionsUpdate, BatchDischargesUpdate, BatchVitalsUpdate, DischargePatient, NewPatient, PatientUpdate, RoomUpdate, SubscriptionTopic, WebSocketMessage } from '../types/websocket';
 
 interface WebSocketHandlers {
   onConnect?: () => void;
@@ -107,6 +107,36 @@ export class WebSocketService {
     }
   }
 
+  private isBatchVitalsUpdate(data: unknown): data is BatchVitalsUpdate {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'type' in data &&
+      data.type === 'BATCH_UPDATE_VITALS' &&
+      'updates' in data
+    );
+  }
+
+  private isBatchAdmissions(data: unknown): data is BatchAdmissionsUpdate {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'type' in data &&
+      data.type === 'BATCH_NEW_PATIENTS' &&
+      'patients' in data
+    );
+  }
+
+  private isBatchDischarges(data: unknown): data is BatchDischargesUpdate {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'type' in data &&
+      data.type === 'BATCH_DISCHARGES' &&
+      'discharges' in data
+    );
+  }
+
   private handleMessage = (event: MessageEvent) => {
     if (!this.dispatch || !this.queryClient) return;
 
@@ -118,13 +148,25 @@ export class WebSocketService {
 
         switch (topic) {
           case 'vitals':
-            if (this.isVitalsUpdate(data)) this.updatePatientData(data);
+            if (this.isBatchVitalsUpdate(data)) {
+              data.updates.forEach(update => this.updatePatientData(update));
+            } else if (this.isVitalsUpdate(data)) {
+              this.updatePatientData(data);
+            }
             break;
           case 'admissions':
-            if (this.isNewPatient(data)) this.handleNewPatient(data.patient);
+            if (this.isBatchAdmissions(data)) {
+              data.patients.forEach(admission => this.handleNewPatient(admission.patient));
+            } else if (this.isNewPatient(data)) {
+              this.handleNewPatient(data.patient);
+            }
             break;
           case 'discharges':
-            if (this.isDischarge(data)) this.removePatient(data.patientId);
+            if (this.isBatchDischarges(data)) {
+              data.discharges.forEach(discharge => this.removePatient(discharge.patientId));
+            } else if (this.isDischarge(data)) {
+              this.removePatient(data.patientId);
+            }
             break;
           default:
             if (topic.startsWith('room-') && this.isRoomUpdate(data)) {
