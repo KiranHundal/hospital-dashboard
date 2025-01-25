@@ -54,6 +54,12 @@ server.on('connection', (ws) => {
       }
 
       if (data.type === 'GENERATE_PATIENTS') {
+        const subscriptions = clientSubscriptions.get(ws);
+        if (!subscriptions.has('admissions')) {
+          subscriptions.add('admissions');
+          console.log('Client auto-subscribed to: admissions');
+        }
+
         const batchMessage = {
           topic: 'admissions',
           data: {
