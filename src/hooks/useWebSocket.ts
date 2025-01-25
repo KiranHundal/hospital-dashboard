@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAppDispatch } from './redux';
 import WebSocketService from '../services/WebSocketService';
+import { SubscriptionTopic } from '../types/websocket';
 
-export const useWebSocket = () => {
+export const useWebSocket = (topics: SubscriptionTopic[] = []) => {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
 
@@ -13,9 +14,11 @@ export const useWebSocket = () => {
 
     const cleanup = webSocketService.connect({
       onConnect: () => {
+        topics.forEach(topic => webSocketService.subscribe(topic));
         console.log('WebSocket connection established');
       },
       onDisconnect: () => {
+        topics.forEach(topic => webSocketService.unsubscribe(topic));
         console.log('WebSocket connection lost');
       },
       onError: (error) => {
@@ -23,8 +26,11 @@ export const useWebSocket = () => {
       },
     });
 
-    return cleanup;
-  }, [dispatch, queryClient]);
-};
+    return () => {
+      webSocketService.disconnect();
+      cleanup(); 
+    };
+  }, [dispatch, queryClient, topics]);
 
-export default useWebSocket;
+  return WebSocketService.getInstance();
+};

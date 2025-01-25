@@ -1,10 +1,11 @@
 import { QueryClient } from '@tanstack/react-query';
 import { Dispatch } from 'redux';
-import { WebSocketMessage } from '../types/patient';
+import { Patient } from '../types/patient';
 import { WEBSOCKET_CONFIG } from '../config/constants';
 import { setConnected, setError, clearError } from '../store/slices/websocketSlice';
 import { updatePatient, clearUpdateHighlight } from '../store/slices/patientSlice';
 import { QUERY_KEYS } from '../hooks/queries';
+import { DischargePatient, NewPatient, PatientUpdate, RoomUpdate, SubscriptionTopic, WebSocketMessage } from '../types/websocket';
 
 interface WebSocketHandlers {
   onConnect?: () => void;
@@ -15,8 +16,13 @@ interface WebSocketHandlers {
 export class WebSocketService {
   private static instance: WebSocketService | null = null;
   private ws: WebSocket | null = null;
+  private isReconnecting = false;
+  private maxRetries = 5;
+  private retryDelay = 3000;
   private reconnectAttempts = 0;
   private reconnectTimeout: NodeJS.Timeout | null = null;
+  private subscriptions = new Set<SubscriptionTopic>();
+  private isConnected = false;
   private dispatch: Dispatch | null = null;
   private queryClient: QueryClient | null = null;
 
@@ -43,22 +49,62 @@ export class WebSocketService {
       this.ws = new WebSocket(WEBSOCKET_CONFIG.URL);
 
       this.ws.onopen = () => {
-        console.log('WebSocket Connected');
-        this.dispatch!(setConnected(true));
+        console.log('WebSocket connected');
+        this.isConnected = true;
+        this.isReconnecting = false;
         this.reconnectAttempts = 0;
+        this.clearReconnectionTimer();
+
+        this.subscriptions.forEach((topic) => {
+          if (this.ws?.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ type: 'SUBSCRIBE', topic }));
+          }
+        });
+
+        this.dispatch!(setConnected(true));
         handlers.onConnect?.();
       };
 
       this.ws.onmessage = this.handleMessage;
-      this.ws.onclose = this.handleClose(handlers);
-      this.ws.onerror = this.handleError(handlers);
 
+      this.ws.onclose = () => {
+        if (this.isConnected) {
+          console.log('WebSocket disconnected');
+          this.isConnected = false;
+          this.dispatch!(setConnected(false));
+          handlers.onDisconnect?.();
+        }
+
+        if (!this.isReconnecting) {
+          this.attemptReconnection();
+        }
+      };
+
+      this.ws.onerror = (event) => {
+        console.error('WebSocket error:', event);
+        this.dispatch?.(setError('WebSocket connection error'));
+        handlers.onError?.(new Error('WebSocket connection error'));
+      };
     } catch (error) {
       console.error('WebSocket connection error:', error);
-      this.handleError(handlers)(new Event('error'));
+      handlers.onError?.(new Error('WebSocket connection error'));
     }
 
     return () => this.disconnect();
+  }
+
+  subscribe(topic: SubscriptionTopic) {
+    this.subscriptions.add(topic);
+    if (this.isConnected && this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'SUBSCRIBE', topic }));
+    }
+  }
+
+  unsubscribe(topic: SubscriptionTopic) {
+    this.subscriptions.delete(topic);
+    if (this.isConnected && this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'UNSUBSCRIBE', topic }));
+    }
   }
 
   private handleMessage = (event: MessageEvent) => {
@@ -67,47 +113,128 @@ export class WebSocketService {
     try {
       const message = JSON.parse(event.data);
       if (this.isValidWebSocketMessage(message)) {
-        this.updatePatientData(message);
-      } else {
-        console.warn('Invalid message format:', message);
+        const { topic, data } = message;
+        if (!this.subscriptions.has(topic)) return;
+
+        switch (topic) {
+          case 'vitals':
+            if (this.isVitalsUpdate(data)) this.updatePatientData(data);
+            break;
+          case 'admissions':
+            if (this.isNewPatient(data)) this.handleNewPatient(data.patient);
+            break;
+          case 'discharges':
+            if (this.isDischarge(data)) this.removePatient(data.patientId);
+            break;
+          default:
+            if (topic.startsWith('room-') && this.isRoomUpdate(data)) {
+              this.handleRoomUpdate(data);
+            }
+        }
       }
     } catch (err) {
       console.error('WebSocket message error:', err);
-      this.dispatch(setError('Error processing update'));
+      this.dispatch?.(setError('Error processing update'));
     }
-  };
-
-  private handleClose = (handlers: WebSocketHandlers) => () => {
-    if (!this.dispatch) return;
-
-    console.log('WebSocket Disconnected');
-    this.dispatch(setConnected(false));
-    handlers.onDisconnect?.();
-    this.attemptReconnection();
-  };
-
-  private handleError = (handlers: WebSocketHandlers) => (event: Event) => {
-    if (!this.dispatch) return;
-
-    console.error('WebSocket Error:', event);
-    this.dispatch(setError('WebSocket connection error'));
-    handlers.onError?.(new Error('WebSocket connection error'));
   };
 
   private attemptReconnection() {
-    if (this.reconnectAttempts >= WEBSOCKET_CONFIG.MAX_RECONNECT_ATTEMPTS) {
-      console.error('Max reconnection attempts reached');
+    if (this.isReconnecting || this.reconnectAttempts >= this.maxRetries) {
+      console.log('Max reconnection attempts reached or already reconnecting');
       return;
     }
 
+    this.isReconnecting = true;
     this.reconnectTimeout = setTimeout(() => {
-      console.log(`Attempting reconnection... (${this.reconnectAttempts + 1}/${WEBSOCKET_CONFIG.MAX_RECONNECT_ATTEMPTS})`);
-      this.reconnectAttempts++;
-      this.connect();
-    }, WEBSOCKET_CONFIG.RECONNECT_INTERVAL);
+      if (this.reconnectAttempts < this.maxRetries) {
+        console.log(`Reconnection attempt ${this.reconnectAttempts + 1}/${this.maxRetries}`);
+        this.reconnectAttempts++;
+        this.connect();
+      }
+      this.isReconnecting = false;
+    }, this.retryDelay);
   }
 
-  private updatePatientData(message: WebSocketMessage) {
+  disconnect() {
+    this.isConnected = false;
+    this.isReconnecting = false;
+
+    this.clearReconnectionTimer();
+
+    if (this.ws) {
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+      this.ws.close();
+      this.ws = null;
+    }
+
+    this.dispatch?.(clearError());
+  }
+
+  private clearReconnectionTimer() {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+  }
+
+  private isVitalsUpdate(data: unknown): data is PatientUpdate {
+    return (data as PatientUpdate).type === 'UPDATE_VITALS';
+  }
+
+  private isNewPatient(data: unknown): data is NewPatient {
+    return (data as NewPatient).type === 'NEW_PATIENT';
+  }
+
+  private isDischarge(data: unknown): data is DischargePatient {
+    return (data as DischargePatient).type === 'DISCHARGE';
+  }
+  private isRoomUpdate(data: unknown): data is RoomUpdate {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'type' in data &&
+      data.type === 'ROOM_UPDATE' &&
+      Array.isArray((data as RoomUpdate).patients)
+    );
+  }
+  private handleNewPatient(patient: Patient) {
+    if (!this.queryClient) return;
+
+    this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
+      const patientExists = oldData.some((p) => p.id === patient.id);
+
+      if (patientExists) {
+        console.warn(`Patient with ID ${patient.id} already exists. Skipping addition.`);
+        return oldData;
+      }
+
+      const newData = [...oldData, { ...patient, isUpdated: true }];
+      localStorage.setItem('patients', JSON.stringify(newData));
+      return newData;
+    });
+
+    this.queryClient.setQueryData(QUERY_KEYS.patient(patient.id), patient);
+
+    setTimeout(() => {
+      this.dispatch!(clearUpdateHighlight());
+      this.clearHighlightInCache(patient.id);
+    }, 2000);
+  }
+
+  private removePatient(patientId: string) {
+    if (!this.queryClient) return;
+
+    this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
+      const newData = oldData.filter((p) => p.id !== patientId);
+      localStorage.setItem('patients', JSON.stringify(newData));
+      return newData;
+    });
+
+    this.queryClient.invalidateQueries({ queryKey: QUERY_KEYS.patient(patientId) });
+    localStorage.removeItem(`patient-${patientId}`);
+  }
+  private updatePatientData(message: PatientUpdate) {
     if (!this.dispatch || !this.queryClient) return;
 
     this.dispatch(updatePatient({
@@ -123,12 +250,10 @@ export class WebSocketService {
       this.clearHighlightInCache(message.patientId);
     }, 2000);
   }
-
-  private updateQueryCache(message: WebSocketMessage) {
+  private updateQueryCache(message: PatientUpdate) {
     if (!this.queryClient) return;
 
-    this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: any) => {
-      if (!Array.isArray(oldData)) return oldData;
+    this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
       const updatedPatients = oldData.map(patient =>
         patient.id === message.patientId
           ? { ...patient, vitals: { ...patient.vitals, ...message.vitals }, isUpdated: true }
@@ -140,7 +265,7 @@ export class WebSocketService {
 
     this.queryClient.setQueryData(
       QUERY_KEYS.patient(message.patientId),
-      (oldData: any) => {
+      (oldData: Patient | undefined) => {
         if (!oldData) return oldData;
         const updatedPatient = {
           ...oldData,
@@ -156,8 +281,7 @@ export class WebSocketService {
   private clearHighlightInCache(patientId: string) {
     if (!this.queryClient) return;
 
-    this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: any) => {
-      if (!Array.isArray(oldData)) return oldData;
+    this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
       const clearedPatients = oldData.map(patient =>
         patient.id === patientId
           ? { ...patient, isUpdated: false }
@@ -166,30 +290,76 @@ export class WebSocketService {
       localStorage.setItem('patients', JSON.stringify(clearedPatients));
       return clearedPatients;
     });
-  }
 
-  private isValidWebSocketMessage(message: any): message is WebSocketMessage {
-    return (
-      typeof message === 'object' &&
-      message !== null &&
-      'patientId' in message &&
-      'vitals' in message &&
-      typeof message.patientId === 'string' &&
-      typeof message.vitals === 'object'
+    this.queryClient.setQueryData(
+      QUERY_KEYS.patient(patientId),
+      (oldData: Patient | undefined) => {
+        if (!oldData) return oldData;
+        const clearedPatient = { ...oldData, isUpdated: false };
+        localStorage.setItem(`patient-${patientId}`, JSON.stringify(clearedPatient));
+        return clearedPatient;
+      }
     );
   }
 
-  disconnect() {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-    }
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-    if (this.dispatch) {
-      this.dispatch(clearError());
-    }
+  private clearRoomHighlights(room: string) {
+    if (!this.queryClient) return;
+
+    this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
+      const clearedPatients = oldData.map(patient => {
+        if (patient.room === room) {
+          return { ...patient, isUpdated: false };
+        }
+        return patient;
+      });
+
+      localStorage.setItem('patients', JSON.stringify(clearedPatients));
+      return clearedPatients;
+    });
+  }
+
+  private handleRoomUpdate( data: RoomUpdate) {
+    const newRoom = data.roomNumber.toString();
+
+    if (!this.queryClient) return;
+
+    this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
+      const updatedPatients = oldData.map((patient) => {
+        const updateForPatient = data.patients.find((p) => p.patientId === patient.id);
+
+        if (updateForPatient) {
+          return {
+            ...patient,
+            room: newRoom,
+            vitals: { ...patient.vitals, ...updateForPatient.vitals },
+            isUpdated: true,
+          };
+        }
+        return patient;
+      });
+
+      localStorage.setItem('patients', JSON.stringify(updatedPatients));
+      return updatedPatients;
+    });
+
+    setTimeout(() => {
+      this.dispatch!(clearUpdateHighlight());
+      data.patients.forEach((patientUpdate) => {
+        this.clearHighlightInCache(patientUpdate.patientId);
+      });
+    }, 2000);
+  }
+
+
+
+
+  private isValidWebSocketMessage(message: unknown): message is WebSocketMessage {
+    return (
+      typeof message === 'object' &&
+      message !== null &&
+      'topic' in message &&
+      'data' in message
+    );
   }
 }
 

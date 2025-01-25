@@ -1,6 +1,9 @@
-import { useState, useCallback} from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useAppSelector } from "../../hooks/redux";
-import { selectUpdatedPatientId, selectWebSocketState } from "../../store/selectors/patientSelectors";
+import {
+  selectUpdatedPatientId,
+  selectWebSocketState,
+} from "../../store/selectors/patientSelectors";
 import { Header } from "./Header";
 import { PatientTable } from "../patient/PatientTable";
 import { PatientSummary } from "../patient/PatientSummary";
@@ -15,6 +18,7 @@ import { withLoading } from "../../hocs/withLoading";
 import { SortableData } from "../shared/SortableData";
 import { Patient } from "../../types/patient";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { SubscriptionTopic } from "../../types/websocket";
 
 const PatientTableWithLoading = withLoading(PatientTable);
 const PatientSummaryWithLoading = withLoading(PatientSummary);
@@ -24,7 +28,7 @@ const SortedPatientTable = ({
   updatedPatientId,
   isLoading,
   error,
-  onResetSortChange
+  onResetSortChange,
 }: {
   patients: Patient[];
   updatedPatientId?: string;
@@ -57,21 +61,28 @@ const SortedPatientTable = ({
 };
 
 export const Dashboard = () => {
-  useWebSocket();
-
-  const { isConnected } = useAppSelector(selectWebSocketState);
-  const updatedPatientId = useAppSelector(selectUpdatedPatientId);
-
   const {
     data: patients = [],
     isLoading,
     error,
     isError,
-    dataUpdatedAt
+    dataUpdatedAt,
   } = usePatients();
+  const roomTopics = useMemo(() => {
+    const uniqueRooms = [...new Set(patients.map((patient) => patient.room))];
+    return uniqueRooms.map((room) => `room-${room}` as SubscriptionTopic); // Explicitly cast
+  }, [patients]);
+
+  // Subscribe to topics dynamically
+  useWebSocket(["vitals", "admissions", "discharges", ...roomTopics]);
+
+  const { isConnected } = useAppSelector(selectWebSocketState);
+  const updatedPatientId = useAppSelector(selectUpdatedPatientId);
 
   const [isFilterPanelOpen, setFilterPanelOpen] = useState(false);
-  const [currentResetSort, setCurrentResetSort] = useState<(() => void) | null>(null);
+  const [currentResetSort, setCurrentResetSort] = useState<(() => void) | null>(
+    null
+  );
 
   const { filteredPatients, setFilterCriteria } = usePatientFilter(patients);
   const {
@@ -111,7 +122,9 @@ export const Dashboard = () => {
         <Header
           patientCount={searchedPatients.length}
           isConnected={isConnected}
-          lastUpdate={dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : undefined}
+          lastUpdate={
+            dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : undefined
+          }
         />
 
         <PatientSummaryWithLoading
