@@ -1,11 +1,11 @@
 import { QueryClient } from '@tanstack/react-query';
 import { Dispatch } from 'redux';
-import { Patient } from '../types/patient';
+import { Patient, PatientUpdate } from '../types/patient';
 import { WEBSOCKET_CONFIG } from '../config/constants';
 import { setConnected, setError, clearError } from '../store/slices/websocketSlice';
 import { updatePatient, clearUpdateHighlight } from '../store/slices/patientSlice';
 import { QUERY_KEYS } from '../hooks/queries';
-import { BatchAdmissionsUpdate, BatchDischargesUpdate, BatchVitalsUpdate, DischargePatient, NewPatient, PatientUpdate, RoomUpdate, SubscriptionTopic, WebSocketMessage } from '../types/websocket';
+import { BatchAdmissionsUpdate, BatchDischargesUpdate, BatchVitalsUpdate, DischargePatient, NewPatient, WSPatientUpdate, RoomUpdate, SubscriptionTopic, WebSocketMessage } from '../types/websocket';
 
 interface WebSocketHandlers {
   onConnect?: () => void;
@@ -142,6 +142,8 @@ export class WebSocketService {
 
     try {
       const message = JSON.parse(event.data);
+      console.log('Received WebSocket message:', message); // Debug log
+
       if (this.isValidWebSocketMessage(message)) {
         const { topic, data } = message;
         if (!this.subscriptions.has(topic)) return;
@@ -149,8 +151,17 @@ export class WebSocketService {
         switch (topic) {
           case 'vitals':
             if (this.isBatchVitalsUpdate(data)) {
-              data.updates.forEach(update => this.updatePatientData(update));
+              console.log('Processing batch vitals update:', data);
+              data.updates.forEach(update => {
+                const typedUpdate: WSPatientUpdate = {
+                  ...update,
+                  type: 'UPDATE_VITALS'
+                };
+                this.updatePatientData(typedUpdate);
+              });
             } else if (this.isVitalsUpdate(data)) {
+              console.log('Processing single vital update:', data); // Debug log
+
               this.updatePatientData(data);
             }
             break;
@@ -220,8 +231,8 @@ export class WebSocketService {
     }
   }
 
-  private isVitalsUpdate(data: unknown): data is PatientUpdate {
-    return (data as PatientUpdate).type === 'UPDATE_VITALS';
+  private isVitalsUpdate(data: unknown): data is WSPatientUpdate {
+    return (data as WSPatientUpdate).type === 'UPDATE_VITALS';
   }
 
   private isNewPatient(data: unknown): data is NewPatient {
@@ -243,6 +254,9 @@ export class WebSocketService {
   private handleNewPatient(patient: Patient) {
     if (!this.queryClient) return;
 
+    const timestamp = Date.now();
+    console.log('Adding new patient with timestamp:', timestamp);
+
     this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
       const patientExists = oldData.some((p) => p.id === patient.id);
 
@@ -251,12 +265,22 @@ export class WebSocketService {
         return oldData;
       }
 
-      const newData = [...oldData, { ...patient, isUpdated: true }];
+      const newPatient = {
+        ...patient,
+        isUpdated: true,
+        lastUpdateTime: timestamp
+      };
+
+      const newData = [...oldData, newPatient];
+      console.log('Updated patients after addition:', newData);
       localStorage.setItem('patients', JSON.stringify(newData));
       return newData;
     });
 
-    this.queryClient.setQueryData(QUERY_KEYS.patient(patient.id), patient);
+    this.queryClient.setQueryData(
+      QUERY_KEYS.patient(patient.id),
+      { ...patient, isUpdated: true, lastUpdateTime: timestamp }
+    );
 
     setTimeout(() => {
       this.dispatch!(clearUpdateHighlight());
@@ -276,13 +300,21 @@ export class WebSocketService {
     this.queryClient.invalidateQueries({ queryKey: QUERY_KEYS.patient(patientId) });
     localStorage.removeItem(`patient-${patientId}`);
   }
-  private updatePatientData(message: PatientUpdate) {
+  private updatePatientData(message: WSPatientUpdate) {
     if (!this.dispatch || !this.queryClient) return;
+
+    const updateTime = Date.now();
+  console.log('Updating patient data:', {
+    patientId: message.patientId,
+    updateTime,
+    message
+  });
 
     this.dispatch(updatePatient({
       patientId: message.patientId,
       vitals: message.vitals,
       isUpdated: true,
+      lastUpdateTime: Date.now()
     }));
 
     this.updateQueryCache(message);
@@ -292,15 +324,24 @@ export class WebSocketService {
       this.clearHighlightInCache(message.patientId);
     }, 2000);
   }
-  private updateQueryCache(message: PatientUpdate) {
+  private updateQueryCache(message: WSPatientUpdate) {
     if (!this.queryClient) return;
+
+    const updateTime = Date.now();
+    console.log('Updating query cache with timestamp:', updateTime);
 
     this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
       const updatedPatients = oldData.map(patient =>
         patient.id === message.patientId
-          ? { ...patient, vitals: { ...patient.vitals, ...message.vitals }, isUpdated: true }
+          ? {
+              ...patient,
+              vitals: { ...patient.vitals, ...message.vitals },
+              isUpdated: true,
+              lastUpdateTime: updateTime
+            }
           : patient
       );
+      console.log('Updated patients in cache:', updatedPatients);
       localStorage.setItem('patients', JSON.stringify(updatedPatients));
       return updatedPatients;
     });
@@ -313,6 +354,7 @@ export class WebSocketService {
           ...oldData,
           vitals: { ...oldData.vitals, ...message.vitals },
           isUpdated: true,
+          lastUpdateTime: updateTime
         };
         localStorage.setItem(`patient-${message.patientId}`, JSON.stringify(updatedPatient));
         return updatedPatient;
@@ -360,10 +402,13 @@ export class WebSocketService {
     });
   }
 
-  private handleRoomUpdate( data: RoomUpdate) {
+  private handleRoomUpdate(data: RoomUpdate) {
     const newRoom = data.roomNumber.toString();
+    const updateTime = Date.now();
 
     if (!this.queryClient) return;
+
+    console.log('Handling room update with timestamp:', updateTime);
 
     this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
       const updatedPatients = oldData.map((patient) => {
@@ -375,11 +420,13 @@ export class WebSocketService {
             room: newRoom,
             vitals: { ...patient.vitals, ...updateForPatient.vitals },
             isUpdated: true,
+            lastUpdateTime: updateTime
           };
         }
         return patient;
       });
 
+      console.log('Updated patients after room update:', updatedPatients);
       localStorage.setItem('patients', JSON.stringify(updatedPatients));
       return updatedPatients;
     });

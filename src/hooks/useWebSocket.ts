@@ -28,7 +28,7 @@ export const useWebSocket = (topics: SubscriptionTopic[] = []) => {
 
     return () => {
       webSocketService.disconnect();
-      cleanup(); 
+      cleanup();
     };
   }, [dispatch, queryClient, topics]);
 

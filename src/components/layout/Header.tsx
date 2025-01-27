@@ -8,7 +8,7 @@ interface HeaderProps {
   lastUpdate?: string;
 }
 
-export const Header = ({ patientCount, isConnected, lastUpdate }: HeaderProps) => {
+export const Header = ({ isConnected, lastUpdate }: HeaderProps) => {
   const [buildInfo, setBuildInfo] = useState<{ version: string; buildTime: string } | null>(null);
 
   useEffect(() => {

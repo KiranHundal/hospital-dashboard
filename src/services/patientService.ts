@@ -39,7 +39,7 @@ export class PatientService {
       const { data: posts, statusCode } = await apiService.fetchPosts();
       console.log(`Fetched ${posts.length} posts with status ${statusCode}`);
 
-      const patients = posts.reduce<Patient[]>((validPatients, post) => {
+      const apiPatients = posts.reduce<Patient[]>((validPatients, post) => {
         try {
           const patient = patientAdapter.transformPostToPatient(post);
           validPatients.push(patient);
@@ -49,12 +49,19 @@ export class PatientService {
         return validPatients;
       }, []);
 
-      patients.sort((a, b) => a.id.localeCompare(b.id));
-      this.storage.savePatients(patients);
+      const allPatients = [...cachedData, ...apiPatients];
+
+      // Remove duplicates if any (based on ID)
+      const uniquePatients = Array.from(
+        new Map(allPatients.map(patient => [patient.id, patient])).values()
+      );
+
+      uniquePatients.sort((a, b) => a.id.localeCompare(b.id));
+      this.storage.savePatients(uniquePatients);
 
       return {
-        patients,
-        totalCount: patients.length
+        patients: uniquePatients,
+        totalCount: uniquePatients.length
       };
     } catch (error) {
       let errorMessage = 'An unknown error occurred';

@@ -1,4 +1,4 @@
-import { Patient, VitalSigns } from "./patient";
+import { Patient, PatientUpdate  } from "./patient";
 
 export type SubscriptionTopic = 'vitals' | 'admissions' | 'discharges' | `room-${number}`;
 
@@ -35,12 +35,14 @@ export type BatchDischargesUpdate = {
   type: 'BATCH_DISCHARGES';
   discharges: DischargePatient[];
 };
-
-export type PatientUpdate = {
+export type WSPatientUpdate = PatientUpdate & {
   type: 'UPDATE_ROOM' | 'UPDATE_VITALS';
-  patientId: string;
-  vitals: Partial<VitalSigns>;
 };
+// export type PatientUpdate = {
+//   type: 'UPDATE_ROOM' | 'UPDATE_VITALS';
+//   patientId: string;
+//   vitals: Partial<VitalSigns>;
+// };
 
 export type NewPatient = {
   type: 'NEW_PATIENT';
