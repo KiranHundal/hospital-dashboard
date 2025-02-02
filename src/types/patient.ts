@@ -2,6 +2,8 @@ export interface VitalSigns {
     bloodPressure: string;
     heartRate: number;
     oxygenLevel: number;
+    timestamp?: number;
+
   }
 
   export interface Patient {
@@ -13,6 +15,9 @@ export interface VitalSigns {
     vitals: VitalSigns;
     isUpdated?: boolean;
     lastUpdateTime?: number;
+    fallRisk?: boolean;
+    isolation?: boolean;
+    npo?: boolean;
     [key: string]: unknown;
   }
 
@@ -31,25 +36,3 @@ export enum Gender {
   Other = 'other'
 }
 
-  // export interface WebSocketMessage {
-  //   patientId: string;
-  //   vitals: Partial<VitalSigns>;
-  //   timestamp?: string;
-  //   isUpdated?: boolean;
-  //   lastUpdateTime?: number;
-
-
-  // }
-  // export type WebSocketMessage1 = {
-  //   type: 'UPDATE_VITALS' | 'NEW_PATIENT';
-  // } & (
-  //   | {
-  //       type: 'UPDATE_VITALS';
-  //       patientId: string;
-  //       vitals: Partial<VitalSigns>;
-  //     }
-  //   | {
-  //       type: 'NEW_PATIENT';
-  //       patient: Patient;
-  //     }
-  // );

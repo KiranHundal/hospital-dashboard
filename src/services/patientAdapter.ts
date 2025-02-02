@@ -1,6 +1,6 @@
-import { Patient, VitalSigns } from '../types/patient';
-import { Post } from './api';
-import { TransformationError, ValidationError } from '../types/errors';
+import { Patient, VitalSigns } from "../types/patient";
+import { Post } from "./api";
+import { TransformationError, ValidationError } from "../types/errors";
 
 export const patientAdapter = {
   transformPostToPatient(post: Post): Patient {
@@ -16,6 +16,10 @@ export const patientAdapter = {
         room: this.generateRoomNumber(post.id),
         gender: this.determineGender(post.id),
         vitals,
+
+        fallRisk: Math.random() < 0.2,
+        isolation: Math.random() < 0.1,
+        npo: Math.random() < 0.15,
       };
     } catch (error) {
       throw new TransformationError(
@@ -26,21 +30,21 @@ export const patientAdapter = {
   },
 
   generatePatientId(postId: number): string {
-    return `P${postId.toString().padStart(4, '0')}`;
+    return `P${postId.toString().padStart(4, "0")}`;
   },
 
   generatePatientName(title: string): string {
-    const words = title.split(' ').slice(0, 2);
+    const words = title.split(" ").slice(0, 2);
     if (words.length === 0) {
-      throw new ValidationError('Invalid title: empty string');
+      throw new ValidationError("Invalid title: empty string");
     }
-    return words.join(' ');
+    return words.join(" ");
   },
 
   generateAge(seed: number): number {
     const age = 25 + (seed % 50);
     if (age < 0 || age > 120) {
-      throw new ValidationError('Generated age out of valid range');
+      throw new ValidationError("Generated age out of valid range");
     }
     return age;
   },
@@ -48,11 +52,11 @@ export const patientAdapter = {
   generateRoomNumber(postId: number): string {
     const floor = Math.floor(postId / 4) + 1;
     const room = (postId % 4) + 1;
-    return `${floor}${room.toString().padStart(2, '0')}`;
+    return `${floor}${room.toString().padStart(2, "0")}`;
   },
 
-  determineGender(postId: number): 'male' | 'female' {
-    return postId % 2 === 0 ? 'male' : 'female';
+  determineGender(postId: number): "male" | "female" {
+    return postId % 2 === 0 ? "male" : "female";
   },
 
   generateVitals(seed: number): VitalSigns {
@@ -62,22 +66,24 @@ export const patientAdapter = {
     const oxygenLevel = 95 + (seed % 5);
 
     if (systolic < 70 || systolic > 200) {
-      throw new ValidationError('Invalid systolic pressure');
+      throw new ValidationError("Invalid systolic pressure");
     }
     if (diastolic < 40 || diastolic > 130) {
-      throw new ValidationError('Invalid diastolic pressure');
+      throw new ValidationError("Invalid diastolic pressure");
     }
     if (heartRate < 40 || heartRate > 200) {
-      throw new ValidationError('Invalid heart rate');
+      throw new ValidationError("Invalid heart rate");
     }
     if (oxygenLevel < 70 || oxygenLevel > 100) {
-      throw new ValidationError('Invalid oxygen level');
+      throw new ValidationError("Invalid oxygen level");
     }
+
 
     return {
       bloodPressure: `${systolic}/${diastolic}`,
       heartRate,
-      oxygenLevel
+      oxygenLevel,
+      timestamp: Date.now()
     };
-  }
+  },
 };
