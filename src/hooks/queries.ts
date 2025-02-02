@@ -25,6 +25,7 @@ export const usePatients = () => {
       try {
         const patientService = PatientService.getInstance();
         const { patients, error: apiError } = await patientService.fetchPatients();
+        console.log("Fetched patients:", patients);
 
         if (apiError) {
           throw new Error(apiError);
@@ -43,6 +44,8 @@ export const usePatients = () => {
     initialData: () => {
       try {
         const storedPatients = localStorage.getItem(LOCAL_STORAGE_KEYS.PATIENTS);
+        console.log("Patients from localStorage:", storedPatients);
+
         if (!storedPatients) return [] as Patient[];
         return JSON.parse(storedPatients) as Patient[];
       } catch (err) {
@@ -50,7 +53,6 @@ export const usePatients = () => {
         return [] as Patient[];
       }
     },
-    staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
   });
 };
@@ -88,7 +90,6 @@ export const usePatient = (patientId: string) => {
       }
     },
     enabled: !!patientId,
-    staleTime: 1000 * 60 * 5,
   });
 };
 

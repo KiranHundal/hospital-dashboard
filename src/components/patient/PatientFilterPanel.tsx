@@ -24,6 +24,9 @@ export const PatientFilterPanel = ({
     abnormalHeartRate: false,
   });
   const [recentUpdates, setRecentUpdates] = useState(false);
+  const [recentUpdateWindow, setRecentUpdateWindow] = useState<
+    "5min" | "15min" | "1hour"
+  >("1hour");
 
   const handleApplyFilters = () => {
     const formattedAgeRange = ageRange.every((val) => val !== undefined)
@@ -37,6 +40,7 @@ export const PatientFilterPanel = ({
       room,
       criticalVitals,
       recentUpdates,
+      recentUpdateWindow,
     });
 
     onClose();
@@ -189,17 +193,39 @@ export const PatientFilterPanel = ({
             )}
           </div>
         </div>
-
-        <div>
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={recentUpdates}
-              onChange={() => setRecentUpdates(!recentUpdates)}
-              className="rounded focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="text-gray-700">Recent Updates</span>
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700">
+            Recent Updates
           </label>
+          <div className="flex items-center justify-between">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={recentUpdates}
+                onChange={() => setRecentUpdates(!recentUpdates)}
+                className="rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-gray-700">Show Recent Updates</span>
+            </label>
+          </div>
+
+          {recentUpdates && (
+            <div className="mt-2 flex flex-col space-y-2">
+              <select
+                value={recentUpdateWindow}
+                onChange={(e) =>
+                  setRecentUpdateWindow(
+                    e.target.value as "5min" | "15min" | "1hour"
+                  )
+                }
+                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="5min">Last 5 minutes</option>
+                <option value="15min">Last 15 minutes</option>
+                <option value="1hour">Last hour</option>
+              </select>
+            </div>
+          )}
         </div>
 
         <button

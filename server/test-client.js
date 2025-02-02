@@ -3,7 +3,8 @@ import WebSocket from 'ws';
 class WebSocketTestClient {
     constructor(url = 'ws://localhost:8080') {
         this.ws = new WebSocket(url);
-        this.existingPatients = [];  // Track existing patients
+        this.existingPatients = [];
+        this.updateInterval = null;
         this.setupEventHandlers();
     }
 
@@ -14,46 +15,46 @@ class WebSocketTestClient {
         });
 
         this.ws.on('message', (data) => {
-            const message = JSON.parse(data);
-            console.log('Received:', message);
+            try {
+                const message = JSON.parse(data);
+                console.log('Received:', message);
 
-            // Track patients from batch admissions
-            if (message.data?.type === 'BATCH_NEW_PATIENTS') {
-                this.existingPatients = message.data.patients.map(p => p.patient.id);
-                console.log('Tracked patients:', this.existingPatients);
+                if (message.data?.type === 'BATCH_NEW_PATIENTS') {
+                    this.existingPatients = message.data.patients.map(p => p.patient.id);
+                    console.log('Tracked patients:', this.existingPatients);
+                }
+            } catch (error) {
+                console.error('Error processing message:', error);
             }
         });
 
         this.ws.on('error', (error) => {
             console.error('WebSocket error:', error);
         });
+        this.ws.on('close', () => {
+            console.log('Disconnected from WebSocket server');
+            this.stopContinuousUpdates();  
+        });
     }
 
     async runTests() {
-        // Subscribe to topics
         console.log('\n1. Testing Subscriptions...');
         this.subscribe('vitals');
         this.subscribe('admissions');
-        this.subscribe('room-101');
+        this.subscribe('room-102');
 
-        // Wait a bit before sending updates
         await this.delay(1000);
 
-        // Test patient generation
         console.log('\n2. Testing Patient Generation...');
         this.generatePatients(5);
 
-        // Wait for patients to be generated and tracked
         await this.delay(2000);
 
-        // Test vitals updates for existing patients
         console.log('\n3. Testing Vitals Updates...');
         if (this.existingPatients.length > 0) {
-            // Update first patient
             this.sendVitalsUpdate(this.existingPatients[0]);
             await this.delay(500);
 
-            // Update second patient if exists
             if (this.existingPatients[1]) {
                 this.sendVitalsUpdate(this.existingPatients[1]);
             }
@@ -63,12 +64,49 @@ class WebSocketTestClient {
 
         await this.delay(2000);
 
-        // Test room updates
         console.log('\n4. Testing Room Updates...');
         if (this.existingPatients.length > 0) {
             this.sendRoomUpdate(this.existingPatients[0]);
         }
+        await this.delay(2000);
+        console.log('\n5. Starting Continuous Updates...');
+        this.startContinuousUpdates();
     }
+    startContinuousUpdates(interval = 5000) {
+        console.log(`Starting continuous updates every ${interval}ms`);
+
+        const updateLoop = async () => {
+            if (this.existingPatients.length > 0) {
+                const batchSize = Math.floor(Math.random() * this.existingPatients.length) + 1;
+                const selectedPatients = [...this.existingPatients]
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, batchSize);
+
+                console.log(`Updating vitals for ${selectedPatients.length} patients`);
+                selectedPatients.forEach(patientId => {
+                    this.sendVitalsUpdate(patientId);
+                });
+
+                if (Math.random() < 0.3) {
+                    const randomPatient = selectedPatients[0];
+                    const newRoom = Math.floor(100 + Math.random() * 900);
+                    console.log(`Moving patient ${randomPatient} to room ${newRoom}`);
+                    this.sendRoomUpdate(randomPatient, newRoom);
+                }
+            }
+        };
+
+        this.updateInterval = setInterval(updateLoop, interval);
+    }
+
+    stopContinuousUpdates() {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+            console.log('Stopped continuous updates');
+        }
+    }
+
 
     subscribe(topic) {
         console.log(`Subscribing to ${topic}...`);
@@ -102,13 +140,13 @@ class WebSocketTestClient {
         }));
     }
 
-    sendRoomUpdate(patientId) {
-        console.log('Sending room update...');
+    sendRoomUpdate(patientId, roomNumber = 101) {
+        console.log(`Sending room update for patient ${patientId} to room ${roomNumber}...`);
         this.ws.send(JSON.stringify({
-            topic: 'room-101',
+            topic: `room-${roomNumber}`,
             data: {
                 type: 'ROOM_UPDATE',
-                roomNumber: 101,
+                roomNumber: roomNumber,
                 patients: [{
                     patientId,
                     vitals: {
@@ -126,5 +164,9 @@ class WebSocketTestClient {
     }
 }
 
-// Create and run the test client
 const testClient = new WebSocketTestClient();
+process.on('SIGINT', () => {
+    console.log('\nStopping continuous updates...');
+    testClient.stopContinuousUpdates();
+    process.exit();
+});

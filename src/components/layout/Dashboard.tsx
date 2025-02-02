@@ -5,7 +5,6 @@ import {
   selectWebSocketState,
 } from "../../store/selectors/patientSelectors";
 import { Header } from "./Header";
-import { PatientTable } from "../patient/PatientTable";
 import { PatientSummary } from "../patient/PatientSummary";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { ErrorMessage } from "../ui/ErrorMessage";
@@ -15,50 +14,11 @@ import { PatientFilterPanel } from "../patient/PatientFilterPanel";
 import { SearchAndFilterBar } from "../ui/SearchAndFilterBar";
 import { usePatients } from "../../hooks/queries";
 import { withLoading } from "../../hocs/withLoading";
-import { SortableData } from "../shared/SortableData";
-import { Patient } from "../../types/patient";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { SubscriptionTopic } from "../../types/websocket";
+import SortedPatientTable from "../patient/SortedPatientTable";
 
-const PatientTableWithLoading = withLoading(PatientTable);
 const PatientSummaryWithLoading = withLoading(PatientSummary);
-
-const SortedPatientTable = ({
-  patients,
-  updatedPatientId,
-  isLoading,
-  error,
-  onResetSortChange,
-}: {
-  patients: Patient[];
-  updatedPatientId?: string;
-  isLoading: boolean;
-  error: Error | null;
-  onResetSortChange: (resetSort: () => void) => void;
-}) => {
-  return (
-    <SortableData
-      data={patients}
-      defaultSortField="id"
-      defaultSortDirection="asc"
-    >
-      {({ sortedData, sortConfig, handleSort, resetSort }) => {
-        onResetSortChange(resetSort);
-
-        return (
-          <PatientTableWithLoading
-            patients={sortedData}
-            updatedPatientId={updatedPatientId}
-            onSort={handleSort}
-            sortConfig={sortConfig}
-            isLoading={isLoading}
-            error={error}
-          />
-        );
-      }}
-    </SortableData>
-  );
-};
 
 export const Dashboard = () => {
   const {
@@ -70,10 +30,9 @@ export const Dashboard = () => {
   } = usePatients();
   const roomTopics = useMemo(() => {
     const uniqueRooms = [...new Set(patients.map((patient) => patient.room))];
-    return uniqueRooms.map((room) => `room-${room}` as SubscriptionTopic); // Explicitly cast
+    return uniqueRooms.map((room) => `room-${room}` as SubscriptionTopic);
   }, [patients]);
 
-  // Subscribe to topics dynamically
   useWebSocket(["vitals", "admissions", "discharges", ...roomTopics]);
 
   const { isConnected } = useAppSelector(selectWebSocketState);

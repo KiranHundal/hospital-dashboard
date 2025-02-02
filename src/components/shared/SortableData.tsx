@@ -1,7 +1,5 @@
-// components/shared/SortableData.tsx
 import React from 'react';
 import { Patient } from '../../types/patient';
-import { analyzeVitals } from '../../utils/vitalUtils';
 import { StorageService } from '../../services/StorageService';
 import VitalSignsService from '../../services/VitalSignsService';
 
@@ -39,7 +37,6 @@ export class SortableData<T extends Record<string, any>> extends React.Component
     this.vitalService = VitalSignsService.getInstance();
 
 
-    // Initialize state with stored sort config or default
     const savedConfig = this.storage.getSortConfig() as SortConfig<T> | null;
     this.state = {
       sortConfig: savedConfig || (props.defaultSortField

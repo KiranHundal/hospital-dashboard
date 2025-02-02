@@ -16,6 +16,7 @@ interface APIResponse<T> {
 }
 
 export const apiService = {
+  
   async fetchPosts(): Promise<APIResponse<Post[]>> {
     try {
       const response = await fetch(API_URL);
