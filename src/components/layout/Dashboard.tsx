@@ -17,13 +17,58 @@ import { withLoading } from "../../hocs/withLoading";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { SubscriptionTopic } from "../../types/websocket";
 import SortedPatientTable from "../patient/SortedPatientTable";
+import ExpandablePatientCard from "../patient/ExpandablePatientCard";
 import { useTheme } from "../../hooks/useTheme";
 import { MoonIcon, SunIcon, GridIcon, ListIcon, Split } from 'lucide-react';
 import SplitScreenDashboard from "./SplitScreenDashboard";
+import { Patient } from "../../types/patient";
 
 const PatientSummaryWithLoading = withLoading(PatientSummary);
 
-export const Dashboard = () => {
+interface PatientGridProps {
+  patients: Patient[];
+  updatedPatientId?: string;
+}
+
+interface PatientListProps extends PatientGridProps {
+  isLoading: boolean;
+  error: Error | null;
+  onResetSortChange: (resetSort: () => void) => void;
+}
+
+const PatientGrid: React.FC<PatientGridProps> = ({ patients, updatedPatientId }) => {
+  return (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {patients.map((patient) => (
+        <ExpandablePatientCard
+          key={patient.id}
+          patient={patient}
+          isUpdated={patient.id === updatedPatientId}
+        />
+      ))}
+    </div>
+  );
+};
+
+const PatientList: React.FC<PatientListProps> = ({
+  patients,
+  updatedPatientId,
+  isLoading,
+  error,
+  onResetSortChange
+}) => {
+  return (
+    <SortedPatientTable
+      patients={patients}
+      updatedPatientId={updatedPatientId}
+      isLoading={isLoading}
+      error={error}
+      onResetSortChange={onResetSortChange}
+    />
+  );
+};
+
+export const Dashboard: React.FC = () => {
   const {
     data: patients = [],
     isLoading,
@@ -41,7 +86,7 @@ export const Dashboard = () => {
 
   const { isConnected } = useAppSelector(selectWebSocketState);
   const updatedPatientId = useAppSelector(selectUpdatedPatientId);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, colors } = useTheme();
   const [layout, setLayout] = useState<'grid' | 'list' | 'split'>('grid');
   const [isFilterPanelOpen, setFilterPanelOpen] = useState(false);
   const [currentResetSort, setCurrentResetSort] = useState<(() => void) | null>(null);
@@ -71,9 +116,37 @@ export const Dashboard = () => {
   if (isLoading) return <LoadingSpinner />;
   if (isError && error) return <ErrorMessage message={error.message} />;
 
+  const renderContent = () => {
+    switch (layout) {
+      case 'grid':
+        return (
+          <PatientGrid
+            patients={searchedPatients}
+            updatedPatientId={updatedPatientId}
+          />
+        );
+      case 'list':
+        return (
+          <PatientList
+            patients={searchedPatients}
+            updatedPatientId={updatedPatientId}
+            isLoading={isLoading}
+            error={error}
+            onResetSortChange={handleResetSortChange}
+          />
+        );
+      case 'split':
+        return (
+          <SplitScreenDashboard patients={searchedPatients} />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 shadow-sm">
+    <div className={`min-h-screen ${colors.background}`}>
+      <div className={`sticky top-0 z-40 ${colors.cardBg} shadow-sm backdrop-blur`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Header
@@ -127,19 +200,9 @@ export const Dashboard = () => {
             onFilter={() => setFilterPanelOpen(true)}
           />
 
-          {layout === 'split' ? (
-            <SplitScreenDashboard patients={searchedPatients} />
-          ) : (
-            <div className={layout === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6' : 'mt-6'}>
-              <SortedPatientTable
-                patients={searchedPatients}
-                updatedPatientId={updatedPatientId}
-                isLoading={isLoading}
-                error={error}
-                onResetSortChange={handleResetSortChange}
-              />
-            </div>
-          )}
+          <div className="mt-6">
+            {renderContent()}
+          </div>
         </div>
       </div>
 

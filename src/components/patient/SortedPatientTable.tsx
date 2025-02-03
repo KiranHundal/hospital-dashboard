@@ -19,6 +19,7 @@ const SortedPatientTable: React.FC<SortedPatientTableProps> = ({
   error,
   onResetSortChange,
 }) => {
+  
   return (
     <SortableData data={patients} defaultSortField="id" defaultSortDirection="asc">
       {({ sortedData, sortConfig, handleSort, resetSort }) => (

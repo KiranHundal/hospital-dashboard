@@ -127,11 +127,15 @@ export class SortableData<T extends Record<string, any>> extends React.Component
   }
 
   render() {
-    return this.props.children({
-      sortedData: this.getSortedData(),
-      sortConfig: this.state.sortConfig,
-      handleSort: this.handleSort,
-      resetSort: this.resetSort,
-    });
+    return (
+      <div className="transition-colors duration-300">
+        {this.props.children({
+          sortedData: this.getSortedData(),
+          sortConfig: this.state.sortConfig,
+          handleSort: this.handleSort,
+          resetSort: this.resetSort,
+        })}
+      </div>
+    );
   }
 }

@@ -19,6 +19,7 @@ export interface VitalSigns {
     isolation?: boolean;
     npo?: boolean;
     [key: string]: unknown;
+    
   }
 
 
@@ -35,4 +36,3 @@ export enum Gender {
   Female = 'female',
   Other = 'other'
 }
-

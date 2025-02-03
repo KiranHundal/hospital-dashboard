@@ -1,68 +1,78 @@
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+// PatientTable.tsx
+import React from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { Patient } from "../../types/patient";
 import { PatientRow } from "./PatientRow";
-import { usePagination } from "../../hooks/usePagination";
+import { useTheme } from "../../hooks/useTheme";
+import { SortConfig } from "../shared/SortableData";
 
 interface PatientTableProps {
   patients: Patient[];
   updatedPatientId?: string;
-  rowsPerPage?: number;
+  sortConfig: SortConfig<Patient> | null;
   onSort: (field: keyof Patient) => void;
-  sortConfig: { field: keyof Patient; direction: "asc" | "desc" } | null;
+  isLoading?: boolean;
+  error?: Error | null;
 }
 
-export const PatientTable = ({
+export const PatientTable: React.FC<PatientTableProps> = ({
   patients,
   updatedPatientId,
-  rowsPerPage = 10,
-  onSort,
   sortConfig,
-}: PatientTableProps) => {
-  const {
-    paginatedData: paginatedPatients,
-    currentPage,
-    totalPages,
-    goToNextPage,
-    goToPreviousPage,
-  } = usePagination(patients, rowsPerPage);
-
-  const SortIndicator = ({ field }: { field: keyof Patient }) => {
-    if (sortConfig?.field !== field) return null;
-
-    return sortConfig.direction === "asc" ? (
-      <ChevronUp className="w-4 h-4 inline-block ml-1" />
-    ) : (
-      <ChevronDown className="w-4 h-4 inline-block ml-1" />
-    );
-  };
-
-  const TableHeader = ({ field, children }: { field: keyof Patient; children: React.ReactNode }) => (
-    <th
-      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-      onClick={() => onSort(field)}
-    >
-      <div className="flex items-center">
-        {children}
-        <SortIndicator field={field} />
-      </div>
-    </th>
-  );
+  onSort,
+}) => {
+  const { theme } = useTheme();
 
   return (
-    <div className="bg-white shadow overflow-hidden rounded-lg">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div
+      className={`overflow-hidden rounded-lg transition-colors duration-300`}
+    >
+      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead
+          className={`${theme === "dark" ? "bg-slate-800/50" : "bg-gray-50"}
+                       transition-colors duration-300`}
+        >
           <tr>
-            <TableHeader field="id">Patient ID</TableHeader>
-            <TableHeader field="name">Name</TableHeader>
-            <TableHeader field="room">Room</TableHeader>
-            <TableHeader field="age">Age</TableHeader>
-            <TableHeader field="gender">Gender</TableHeader>
-            <TableHeader field="vitals">Vitals</TableHeader>
+            {[
+              { key: "id", label: "ID" },
+              { key: "name", label: "Name" },
+              { key: "room", label: "Room" },
+              { key: "age", label: "Age/Gender" },
+              { key: "vitals", label: "BP", sortable: true },
+              { key: "vitals", label: "O₂", sortable: true },
+              { key: "vitals", label: "HR", sortable: true },
+              { key: "vitals", label: "Last Update", sortable: true },
+              { key: "", label: "Actions", sortable: false },
+            ].map((column) => (
+              <th
+                key={column.label}
+                scope="col"
+                className={`
+                  px-6 py-3 text-left text-xs font-medium tracking-wider
+                  ${theme === "dark" ? "text-gray-400" : "text-gray-500"}
+                  ${column.sortable ? "cursor-pointer" : ""}
+                  transition-colors duration-300
+                `}
+                onClick={() =>
+                  column.sortable && onSort(column.key as keyof Patient)
+                }
+              >
+                <div className="flex items-center">
+                  {column.label}
+                  {column.sortable &&
+                    sortConfig?.field === column.key &&
+                    (sortConfig.direction === "asc" ? (
+                      <ChevronUp className="w-4 h-4 ml-1" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 ml-1" />
+                    ))}
+                </div>
+              </th>
+            ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {paginatedPatients.map((patient) => (
+ <tbody className={`${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}
+                        transition-colors duration-300`}>          {patients.map((patient) => (
             <PatientRow
               key={patient.id}
               patient={patient}
@@ -71,26 +81,8 @@ export const PatientTable = ({
           ))}
         </tbody>
       </table>
-
-      <div className="flex justify-between items-center p-4 bg-gray-50">
-        <button
-          onClick={goToPreviousPage}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={goToNextPage}
-          disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
     </div>
   );
 };
+
+export default PatientTable;
