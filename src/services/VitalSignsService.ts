@@ -1,4 +1,3 @@
-// services/VitalSignsService.ts
 import { VitalSigns } from '../types/patient';
 import { VITAL_THRESHOLDS } from '../config/constants';
 
@@ -9,6 +8,10 @@ export interface VitalStatus {
   isHRLow: boolean;
   isO2Low: boolean;
   severityScore: number;
+  bpSeverity: number;
+  hrSeverity: number;
+  o2Severity: number;
+  getHighestSeverity: () => 'bloodPressure' | 'heartRate' | 'oxygenLevel';
   systolic: number;
   diastolic: number;
 }
@@ -28,14 +31,27 @@ export class VitalSignsService {
   analyzeVitals(vitals: VitalSigns): VitalStatus {
     const [systolic, diastolic] = this.parseBP(vitals.bloodPressure);
 
-    const isBPHigh = systolic > VITAL_THRESHOLDS.BLOOD_PRESSURE.SYSTOLIC.HIGH ||
-                     diastolic > VITAL_THRESHOLDS.BLOOD_PRESSURE.DIASTOLIC.HIGH;
-    const isBPLow = systolic < VITAL_THRESHOLDS.BLOOD_PRESSURE.SYSTOLIC.LOW ||
-                    diastolic < VITAL_THRESHOLDS.BLOOD_PRESSURE.DIASTOLIC.LOW;
+    const isBPHigh =
+      systolic > VITAL_THRESHOLDS.BLOOD_PRESSURE.SYSTOLIC.HIGH ||
+      diastolic > VITAL_THRESHOLDS.BLOOD_PRESSURE.DIASTOLIC.HIGH;
+    const isBPLow =
+      systolic < VITAL_THRESHOLDS.BLOOD_PRESSURE.SYSTOLIC.LOW ||
+      diastolic < VITAL_THRESHOLDS.BLOOD_PRESSURE.DIASTOLIC.LOW;
 
     const isHRHigh = vitals.heartRate > VITAL_THRESHOLDS.HEART_RATE.HIGH;
     const isHRLow = vitals.heartRate < VITAL_THRESHOLDS.HEART_RATE.LOW;
     const isO2Low = vitals.oxygenLevel < VITAL_THRESHOLDS.OXYGEN_LEVEL.LOW;
+
+    const bpSeverity = (isBPHigh || isBPLow) ? 2 : 0;
+    const hrSeverity = (isHRHigh || isHRLow) ? 1 : 0;
+    const o2Severity = isO2Low ? 3 : 0;
+    const severityScore = bpSeverity + hrSeverity + o2Severity;
+
+    const getHighestSeverity = (): 'bloodPressure' | 'heartRate' | 'oxygenLevel' => {
+      if (o2Severity > bpSeverity && o2Severity > hrSeverity) return 'oxygenLevel';
+      if (bpSeverity > hrSeverity) return 'bloodPressure';
+      return 'heartRate';
+    };
 
     return {
       isBPHigh,
@@ -43,47 +59,21 @@ export class VitalSignsService {
       isHRHigh,
       isHRLow,
       isO2Low,
-      severityScore: this.calculateSeverityScore(isBPHigh, isBPLow, isHRHigh, isHRLow, isO2Low),
+      severityScore,
+      bpSeverity,
+      hrSeverity,
+      o2Severity,
+      getHighestSeverity,
       systolic,
-      diastolic
+      diastolic,
     };
   }
 
   private parseBP(bloodPressure: string): [number, number] {
-    const [systolic, diastolic] = bloodPressure.split('/').map(Number);
+    const parts = bloodPressure.split('/');
+    const systolic = parseInt(parts[0], 10);
+    const diastolic = parseInt(parts[1], 10);
     return [systolic, diastolic];
-  }
-
-  private calculateSeverityScore(
-    isBPHigh: boolean,
-    isBPLow: boolean,
-    isHRHigh: boolean,
-    isHRLow: boolean,
-    isO2Low: boolean
-  ): number {
-    const bpScore = (isBPHigh || isBPLow) ? 2 : 0;
-    const hrScore = (isHRHigh || isHRLow) ? 1 : 0;
-    const o2Score = isO2Low ? 3 : 0;
-    return bpScore + hrScore + o2Score;
-  }
-
-  isCritical(vitals: VitalSigns): boolean {
-    const status = this.analyzeVitals(vitals);
-    return status.severityScore > 0;
-  }
-
-  getMostCriticalSystem(vitals: VitalSigns): 'bloodPressure' | 'heartRate' | 'oxygenLevel' | null {
-    const status = this.analyzeVitals(vitals);
-    if (status.severityScore === 0) return null;
-
-    const scores = {
-      bloodPressure: (status.isBPHigh || status.isBPLow) ? 2 : 0,
-      heartRate: (status.isHRHigh || status.isHRLow) ? 1 : 0,
-      oxygenLevel: status.isO2Low ? 3 : 0
-    };
-
-    return Object.entries(scores)
-      .reduce((a, b) => a[1] > b[1] ? a : b)[0] as 'bloodPressure' | 'heartRate' | 'oxygenLevel';
   }
 }
 

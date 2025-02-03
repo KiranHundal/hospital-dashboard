@@ -1,16 +1,16 @@
 import React, { useEffect } from "react";
 import { Patient } from "../../types/patient";
-import { PatientTable } from "./PatientTable";
+import PatientTable from "./PatientTable";
 import { withLoading } from "../../hocs/withLoading";
-import { SortConfig } from '../shared/SortableData';
 import { useTheme } from "../../hooks/useTheme";
+import { SortConfig } from "../../types/sorting";
 
 const PatientTableWithLoading = withLoading(PatientTable);
 
 interface SortedPatientTableContentProps {
   sortedData: Patient[];
   sortConfig: SortConfig<Patient> | null;
-  handleSort: (field: keyof Patient) => void;
+  handleSort: (field: keyof Patient | 'vitals') => void;
   resetSort: () => void;
   updatedPatientId?: string;
   isLoading: boolean;
@@ -28,15 +28,14 @@ const SortedPatientTableContent: React.FC<SortedPatientTableContentProps> = ({
   error,
   onResetSortChange,
 }) => {
-    const { theme } = useTheme();
+  const { theme } = useTheme();
 
   useEffect(() => {
     onResetSortChange(resetSort);
   }, [onResetSortChange, resetSort]);
 
   return (
-    <div className={`${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}
-                   transition-colors duration-300 rounded-lg`}>
+    <div className={`${theme === 'dark' ? 'bg-slate-900' : 'bg-white'} transition-colors duration-300 rounded-lg`}>
       <PatientTableWithLoading
         patients={sortedData}
         updatedPatientId={updatedPatientId}

@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useContext } from "react";
+
+import { ThemeContext } from '../context/ThemeContext';
 
 export const themeColors = {
   dark: {
@@ -74,34 +76,13 @@ export const themeColors = {
 type Theme = 'light' | 'dark';
 
 export const useTheme = () => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme') as Theme;
-      if (savedTheme) return savedTheme;
-
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return prefersDark ? 'dark' : 'light';
+    const context = useContext(ThemeContext);
+    if (!context) {
+      throw new Error('useTheme must be used within a ThemeProvider');
     }
-    return 'light';
-  });
-
-  useEffect(() => {
-    // Save theme preference to localStorage
-    localStorage.setItem('theme', theme);
-    // Update document class for Tailwind dark mode
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(current => current === 'light' ? 'dark' : 'light');
+    return context;
   };
 
-  return {
-    theme,
-    toggleTheme,
-    colors: themeColors[theme]
-  };
-};
+  export default useTheme;
 
-// Add type exports if needed
 export type ThemeColors = typeof themeColors[Theme];

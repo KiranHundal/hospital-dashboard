@@ -1,14 +1,10 @@
 import React from 'react';
 import { Patient } from '../../types/patient';
 import { StorageService } from '../../services/StorageService';
-import VitalSignsService from '../../services/VitalSignsService';
+import { SortConfig } from '../../types/sorting';
+import { sortPatients } from '../../utils/sortHelpers';
 
-export interface SortConfig<T> {
-  field: keyof T;
-  direction: 'asc' | 'desc';
-}
-
-interface SortableDataProps<T> {
+interface SortableDataProps<T extends Patient> {
   data: T[];
   defaultSortField?: keyof T;
   defaultSortDirection?: 'asc' | 'desc';
@@ -24,20 +20,17 @@ interface SortableDataState<T> {
   sortConfig: SortConfig<T> | null;
 }
 
-export class SortableData<T extends Record<string, any>> extends React.Component<
+export class SortableData<T extends Patient> extends React.Component<
   SortableDataProps<T>,
   SortableDataState<T>
 > {
   private storage: StorageService;
-  private vitalService: VitalSignsService;
 
   constructor(props: SortableDataProps<T>) {
     super(props);
     this.storage = StorageService.getInstance();
-    this.vitalService = VitalSignsService.getInstance();
 
-
-    const savedConfig = this.storage.getSortConfig() as SortConfig<T> | null;
+    const savedConfig = this.storage.getSortConfig<T>();
     this.state = {
       sortConfig: savedConfig || (props.defaultSortField
         ? {
@@ -70,61 +63,18 @@ export class SortableData<T extends Record<string, any>> extends React.Component
           direction: defaultSortDirection || 'asc',
         }
       : null;
-
     this.setState({ sortConfig: newConfig });
     if (newConfig) {
       this.storage.saveSortConfig(newConfig);
     }
   };
 
-  getSortedData = () => {
+  getSortedData = (): T[] => {
     const { data } = this.props;
     const { sortConfig } = this.state;
-
     if (!sortConfig) return data;
-
-
-    return [...data].sort((a, b) => {
-        if (this.isPatientData(a) && this.isPatientData(b) && sortConfig.field === 'vitals') {
-          const aStatus = this.vitalService.analyzeVitals(a.vitals);
-          const bStatus = this.vitalService.analyzeVitals(b.vitals);
-          return sortConfig.direction === 'asc'
-            ? bStatus.severityScore - aStatus.severityScore
-            : aStatus.severityScore - bStatus.severityScore;
-        }
-
-      const aValue = a[sortConfig.field];
-      const bValue = b[sortConfig.field];
-
-      const multiplier = sortConfig.direction === 'asc' ? 1 : -1;
-
-      if (sortConfig.field === 'id' && typeof aValue === 'string' && typeof bValue === 'string') {
-        const aNum = parseInt(aValue.replace(/\D/g, ''));
-        const bNum = parseInt(bValue.replace(/\D/g, ''));
-        return multiplier * (aNum - bNum);
-      }
-
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return multiplier * aValue.localeCompare(bValue);
-      }
-
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return multiplier * (aValue - bValue);
-      }
-
-      return 0;
-    });
+    return sortPatients(data, sortConfig);
   };
-
-  private isPatientData(item: any): item is Patient {
-    return (
-      item &&
-      typeof item === 'object' &&
-      'vitals' in item &&
-      typeof item.vitals === 'object' &&
-      'oxygenLevel' in item.vitals
-    );
-  }
 
   render() {
     return (
