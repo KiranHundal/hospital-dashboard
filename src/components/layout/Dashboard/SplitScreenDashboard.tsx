@@ -6,9 +6,9 @@ import {
   Lock,
   Unlock,
 } from "lucide-react";
-import { Patient } from "../../types/patient";
-import VitalsComparison from "../patient/VitalsComparison";
-import ComparisonNotes from "../patient/ComparisonNotes";
+import { Patient } from "../../../types/patient";
+import VitalsComparison from "../../patient/VitalsComparison";
+import ComparisonNotes from "../../patient/ComparisonNotes";
 
 interface SplitScreenDashboardProps {
   patients: Patient[];
@@ -18,7 +18,9 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
   patients,
 }) => {
   const [isSplitView, setSplitView] = useState<boolean>(true);
-  const [selectedPatients, setSelectedPatients] = useState<[Patient | null, Patient | null]>([null, null]);
+  const [selectedPatients, setSelectedPatients] = useState<
+    [Patient | null, Patient | null]
+  >([null, null]);
   const [splitRatio, setSplitRatio] = useState<number>(50);
   const [isSyncScroll, setSyncScroll] = useState(true);
 
@@ -34,7 +36,10 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
       isScrolling.current = true;
 
       const source = e.target as HTMLDivElement;
-      const target = source === leftPanelRef.current ? rightPanelRef.current : leftPanelRef.current;
+      const target =
+        source === leftPanelRef.current
+          ? rightPanelRef.current
+          : leftPanelRef.current;
 
       if (target) {
         target.scrollTop = source.scrollTop;
@@ -106,7 +111,9 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
           <button
             onClick={() => setSyncScroll((prev) => !prev)}
             className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-            title={`${isSyncScroll ? "Disable" : "Enable"} synchronized scrolling`}
+            title={`${
+              isSyncScroll ? "Disable" : "Enable"
+            } synchronized scrolling`}
           >
             {isSyncScroll ? (
               <Lock className="text-blue-500" />
@@ -135,7 +142,9 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
 
             {selectedPatients[0] && (
               <div className="space-y-4">
-                <h2 className="text-xl font-bold">{selectedPatients[0].name}</h2>
+                <h2 className="text-xl font-bold">
+                  {selectedPatients[0].name}
+                </h2>
                 <p>Room: {selectedPatients[0].room}</p>
                 <VitalsComparison
                   patient={selectedPatients[0]}
@@ -163,7 +172,9 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
 
             {selectedPatients[1] && (
               <div className="space-y-4">
-                <h2 className="text-xl font-bold">{selectedPatients[1].name}</h2>
+                <h2 className="text-xl font-bold">
+                  {selectedPatients[1].name}
+                </h2>
                 <p>Room: {selectedPatients[1].room}</p>
                 <VitalsComparison
                   patient={selectedPatients[1]}

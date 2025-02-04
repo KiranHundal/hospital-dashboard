@@ -1,8 +1,7 @@
 import React from "react";
-import { PaginationControls } from "../ui/PaginationControls";
-import ExpandablePatientCard from "../patient/ExpandablePatientCard";
-import { PatientGridProps } from "../../types/dashboard";
-
+import { PaginationControls } from "../../ui/PaginationControls";
+import ExpandablePatientCard from "../../patient/ExpandablePatientCard";
+import { PatientGridProps } from "../../../types/dashboard";
 
 export const PatientGrid: React.FC<PatientGridProps> = ({
   patients,

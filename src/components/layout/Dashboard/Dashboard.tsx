@@ -1,26 +1,26 @@
 import { useState, useCallback, useMemo } from "react";
-import { useAppSelector } from "../../hooks/redux";
+import { useAppSelector } from "../../../hooks/redux";
 import {
   selectUpdatedPatientId,
   selectWebSocketState,
-} from "../../store/selectors/patientSelectors";
-import { Header } from "./Header";
-import { PatientSummary } from "../patient/PatientSummary";
-import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { ErrorMessage } from "../ui/ErrorMessage";
-import { usePatientFilter } from "../../hooks/usePatientFilter";
-import { useSearch } from "../../hooks/useSearch";
-import { PatientFilterPanel } from "../patient/PatientFilterPanel";
-import { SearchAndFilterBar } from "../ui/SearchAndFilterBar";
-import { usePatients } from "../../hooks/queries";
-import { withLoading } from "../../hocs/withLoading";
-import { useWebSocket } from "../../hooks/useWebSocket";
-import { SubscriptionTopic } from "../../types/websocket";
-import { useTheme } from "../../hooks/useTheme";
-import SplitScreenDashboard from "./SplitScreenDashboard";
+} from "../../../store/selectors/patientSelectors";
+import { Header } from "../../Header/Header";
+import { PatientSummary } from "../../patient/PatientSummary";
+import { LoadingSpinner } from "../../ui/LoadingSpinner";
+import { ErrorMessage } from "../../ui/ErrorMessage";
+import { usePatientFilter } from "../../../hooks/usePatientFilter";
+import { useSearch } from "../../../hooks/useSearch";
+import { PatientFilterPanel } from "../../patient/PatientFilterPanel";
+import { SearchAndFilterBar } from "../../ui/SearchAndFilterBar";
+import { usePatients } from "../../../hooks/queries";
+import { withLoading } from "../../../hocs/withLoading";
+import { useWebSocket } from "../../../hooks/useWebSocket";
+import { SubscriptionTopic } from "../../../types/websocket";
+import { useTheme } from "../../../hooks/useTheme";
 import { PatientGrid } from "./PatientGrid";
 import { PatientList } from "./PatientList";
-import { usePagination } from "../../hooks/usePagination";
+import { usePagination } from "../../../hooks/usePagination";
+import SplitScreenDashboard from "./SplitScreenDashboard";
 
 const PatientSummaryWithLoading = withLoading(PatientSummary);
 
@@ -89,7 +89,13 @@ export const Dashboard: React.FC = () => {
     if (currentResetSort) {
       currentResetSort();
     }
-  }, [setFilterCriteria, setSearchTerm, setExactSearchTerm, currentResetSort, resetPagination]);
+  }, [
+    setFilterCriteria,
+    setSearchTerm,
+    setExactSearchTerm,
+    currentResetSort,
+    resetPagination,
+  ]);
 
   if (isLoading) return <LoadingSpinner />;
   if (isError && error) return <ErrorMessage message={error.message} />;
