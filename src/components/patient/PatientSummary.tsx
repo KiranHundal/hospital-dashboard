@@ -16,13 +16,15 @@ import {
 import { Users, Activity, Clock } from 'lucide-react';
 import { usePatientStats } from '../../hooks/usePatientStats';
 import { LayoutItem } from '../../types/dashboard';
-import { StatCardProps } from './StatComponents';
 import { DraggableCriticalStats, DraggableStatCard } from './DraggableStatComponents';
 import { Patient } from '../../types/patient';
+import { FilterCriteria } from '../../utils/filterUtils';
+import { StatCardProps } from './StatComponents';
 
 interface PatientSummaryProps {
   patients: Patient[];
   className?: string;
+  onFilterChange?: (criteria: FilterCriteria) => void;
 }
 
 const defaultLayout: LayoutItem[] = [
@@ -52,11 +54,12 @@ const defaultLayout: LayoutItem[] = [
 export const PatientSummary = memo(({
   patients,
   className = "",
+  onFilterChange
 }: PatientSummaryProps) => {
   const stats = usePatientStats(patients);
-
   const maleCount = patients.filter(p => p.gender.toLowerCase() === "male").length;
   const femaleCount = patients.filter(p => p.gender.toLowerCase() === "female").length;
+
   const patientsDueForVitals = patients.filter((patient) => {
     const lastVitalsTime = patient.vitals?.timestamp;
     if (!lastVitalsTime) return true;
@@ -74,7 +77,11 @@ export const PatientSummary = memo(({
   }, [layout]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor)
   );
 
@@ -92,25 +99,41 @@ export const PatientSummary = memo(({
     setLayout(arrayMove(layout, oldIndex, newIndex));
   };
 
+  const handleCriticalClick = () => {
+    if (onFilterChange) {
+      onFilterChange({
+        criticalVitals: {
+          highBP: stats.criticalPatients.highBP > 0,
+          lowOxygen: stats.criticalPatients.lowO2 > 0,
+          abnormalHeartRate: stats.criticalPatients.lowHR > 0
+        }
+      });
+    }
+  };
+
   const renderCard = (item: LayoutItem) => {
     if (item.type === 'critical') {
       return (
         <DraggableCriticalStats
           key={item.id}
           id={item.id}
-          stats={stats}
+          stats={{
+            criticalPatients: stats.criticalPatients
+          }}
           highlight={patientsDueForVitals.length > 0}
           isLocked={item.isLocked}
+          onClick={handleCriticalClick}
         />
       );
     }
 
-    const cardProps: StatCardProps & { id: string; isLocked?: boolean } = {
+    const cardProps: Omit<StatCardProps, 'onClick'> & { id: string; isLocked?: boolean } = {
       id: item.id,
       isLocked: item.isLocked,
       title: item.title,
       value: '',
       icon: null,
+      description: '',
     };
 
     switch (item.id) {

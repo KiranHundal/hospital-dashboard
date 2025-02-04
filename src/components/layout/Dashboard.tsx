@@ -19,15 +19,24 @@ import { SubscriptionTopic } from "../../types/websocket";
 import SortedPatientTable from "../patient/SortedPatientTable";
 import ExpandablePatientCard from "../patient/ExpandablePatientCard";
 import { useTheme } from "../../hooks/useTheme";
-import { MoonIcon, SunIcon, GridIcon, ListIcon, Split } from 'lucide-react';
 import SplitScreenDashboard from "./SplitScreenDashboard";
 import { Patient } from "../../types/patient";
+import { PaginationControls } from "../ui/PaginationControls";
+import { usePagination } from "../../hooks/usePagination";
 
 const PatientSummaryWithLoading = withLoading(PatientSummary);
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  goToNextPage: () => void;
+  goToPreviousPage: () => void;
+}
 
 interface PatientGridProps {
   patients: Patient[];
   updatedPatientId?: string;
+  pagination: PaginationProps;
 }
 
 interface PatientListProps extends PatientGridProps {
@@ -36,17 +45,24 @@ interface PatientListProps extends PatientGridProps {
   onResetSortChange: (resetSort: () => void) => void;
 }
 
-const PatientGrid: React.FC<PatientGridProps> = ({ patients, updatedPatientId }) => {
+const PatientGrid: React.FC<PatientGridProps> = ({
+  patients,
+  updatedPatientId,
+  pagination,
+}) => {
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {patients.map((patient) => (
-        <ExpandablePatientCard
-          key={patient.id}
-          patient={patient}
-          isUpdated={patient.id === updatedPatientId}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {patients.map((patient) => (
+          <ExpandablePatientCard
+            key={patient.id}
+            patient={patient}
+            isUpdated={patient.id === updatedPatientId}
+          />
+        ))}
+      </div>
+      <PaginationControls {...pagination} />
+    </>
   );
 };
 
@@ -55,16 +71,20 @@ const PatientList: React.FC<PatientListProps> = ({
   updatedPatientId,
   isLoading,
   error,
-  onResetSortChange
+  onResetSortChange,
+  pagination,
 }) => {
   return (
-    <SortedPatientTable
-      patients={patients}
-      updatedPatientId={updatedPatientId}
-      isLoading={isLoading}
-      error={error}
-      onResetSortChange={onResetSortChange}
-    />
+    <>
+      <SortedPatientTable
+        patients={patients}
+        updatedPatientId={updatedPatientId}
+        isLoading={isLoading}
+        error={error}
+        onResetSortChange={onResetSortChange}
+      />
+      <PaginationControls {...pagination} />
+    </>
   );
 };
 
@@ -75,6 +95,7 @@ export const Dashboard: React.FC = () => {
     error,
     isError,
     dataUpdatedAt,
+    refetch,
   } = usePatients();
 
   const roomTopics = useMemo(() => {
@@ -86,10 +107,14 @@ export const Dashboard: React.FC = () => {
 
   const { isConnected } = useAppSelector(selectWebSocketState);
   const updatedPatientId = useAppSelector(selectUpdatedPatientId);
-  const { theme, toggleTheme, colors } = useTheme();
-  const [layout, setLayout] = useState<'grid' | 'list' | 'split'>('grid');
+  const { colors } = useTheme();
+
+  const [layout, setLayout] = useState<"list" | "grid">("list");
+  const [isSplitScreen, setIsSplitScreen] = useState(false);
   const [isFilterPanelOpen, setFilterPanelOpen] = useState(false);
-  const [currentResetSort, setCurrentResetSort] = useState<(() => void) | null>(null);
+  const [currentResetSort, setCurrentResetSort] = useState<(() => void) | null>(
+    null
+  );
 
   const { filteredPatients, setFilterCriteria } = usePatientFilter(patients);
   const {
@@ -98,6 +123,22 @@ export const Dashboard: React.FC = () => {
     setExactSearchTerm,
     filteredPatients: searchedPatients,
   } = useSearch(filteredPatients);
+
+  const {
+    paginatedData: paginatedPatients,
+    currentPage,
+    totalPages,
+    goToNextPage,
+    goToPreviousPage,
+    resetPagination,
+  } = usePagination(searchedPatients, 10);
+
+  const paginationProps = {
+    currentPage,
+    totalPages,
+    goToNextPage,
+    goToPreviousPage,
+  };
 
   const handleResetSortChange = useCallback((resetSort: () => void) => {
     setCurrentResetSort(() => resetSort);
@@ -108,78 +149,58 @@ export const Dashboard: React.FC = () => {
     setSearchTerm("");
     setExactSearchTerm("");
     setFilterPanelOpen(false);
+    resetPagination();
     if (currentResetSort) {
       currentResetSort();
     }
-  }, [setFilterCriteria, setSearchTerm, setExactSearchTerm, currentResetSort]);
+  }, [setFilterCriteria, setSearchTerm, setExactSearchTerm, currentResetSort, resetPagination]);
 
   if (isLoading) return <LoadingSpinner />;
   if (isError && error) return <ErrorMessage message={error.message} />;
 
   const renderContent = () => {
-    switch (layout) {
-      case 'grid':
-        return (
-          <PatientGrid
-            patients={searchedPatients}
-            updatedPatientId={updatedPatientId}
-          />
-        );
-      case 'list':
-        return (
-          <PatientList
-            patients={searchedPatients}
-            updatedPatientId={updatedPatientId}
-            isLoading={isLoading}
-            error={error}
-            onResetSortChange={handleResetSortChange}
-          />
-        );
-      case 'split':
-        return (
-          <SplitScreenDashboard patients={searchedPatients} />
-        );
-      default:
-        return null;
+    if (isSplitScreen) {
+      return <SplitScreenDashboard patients={searchedPatients} />;
     }
+    return layout === "grid" ? (
+      <PatientGrid
+        patients={paginatedPatients}
+        updatedPatientId={updatedPatientId}
+        pagination={paginationProps}
+      />
+    ) : (
+      <PatientList
+        patients={paginatedPatients}
+        updatedPatientId={updatedPatientId}
+        isLoading={isLoading}
+        error={error}
+        onResetSortChange={handleResetSortChange}
+        pagination={paginationProps}
+      />
+    );
   };
 
   return (
     <div className={`min-h-screen ${colors.background}`}>
-      <div className={`sticky top-0 z-40 ${colors.cardBg} shadow-sm backdrop-blur`}>
+      <div
+        className={`sticky top-0 z-40 ${colors.cardBg} shadow-sm backdrop-blur`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Header
               patientCount={searchedPatients.length}
               isConnected={isConnected}
-              lastUpdate={dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : undefined}
+              lastUpdate={
+                dataUpdatedAt
+                  ? new Date(dataUpdatedAt).toISOString()
+                  : undefined
+              }
+              layout={layout}
+              setLayout={setLayout}
+              isSplitScreen={isSplitScreen}
+              toggleSplitScreen={() => setIsSplitScreen((prev) => !prev)}
+              refreshData={refetch}
             />
-
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setLayout(prev => {
-                  if (prev === 'grid') return 'list';
-                  if (prev === 'list') return 'split';
-                  return 'grid';
-                })}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
-                title={`Switch to ${
-                  layout === 'grid' ? 'list' :
-                  layout === 'list' ? 'split' : 'grid'
-                } view`}
-              >
-                {layout === 'grid' ? <ListIcon size={20} /> :
-                 layout === 'list' ? <Split size={20} /> : <GridIcon size={20} />}
-              </button>
-
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
-                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-              >
-                {theme === 'light' ? <MoonIcon size={20} /> : <SunIcon size={20} />}
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -187,6 +208,7 @@ export const Dashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <PatientSummaryWithLoading
           patients={searchedPatients}
+          onFilterChange={setFilterCriteria}
           isLoading={isLoading}
           error={error}
         />
@@ -200,9 +222,7 @@ export const Dashboard: React.FC = () => {
             onFilter={() => setFilterPanelOpen(true)}
           />
 
-          <div className="mt-6">
-            {renderContent()}
-          </div>
+          <div className="mt-6">{renderContent()}</div>
         </div>
       </div>
 

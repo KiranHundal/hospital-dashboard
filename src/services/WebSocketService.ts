@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { Dispatch } from 'redux';
-import { Patient, PatientUpdate } from '../types/patient';
+import { Patient} from '../types/patient';
 import { WEBSOCKET_CONFIG } from '../config/constants';
 import { setConnected, setError, clearError } from '../store/slices/websocketSlice';
 import { updatePatient, clearUpdateHighlight } from '../store/slices/patientSlice';
@@ -12,6 +12,7 @@ interface WebSocketHandlers {
   onDisconnect?: () => void;
   onError?: (error: Error) => void;
 }
+console.log(`Connecting to WebSocket at: ${WEBSOCKET_CONFIG.URL}`);
 
 export class WebSocketService {
   private static instance: WebSocketService | null = null;
@@ -54,6 +55,8 @@ export class WebSocketService {
         this.isReconnecting = false;
         this.reconnectAttempts = 0;
         this.clearReconnectionTimer();
+        this.dispatch!(setConnected(true));
+
 
         this.subscriptions.forEach((topic) => {
           if (this.ws?.readyState === WebSocket.OPEN) {
@@ -87,6 +90,7 @@ export class WebSocketService {
       };
     } catch (error) {
       console.error('WebSocket connection error:', error);
+      this.dispatch?.(setError('WebSocket connection error'));
       handlers.onError?.(new Error('WebSocket connection error'));
     }
 
@@ -142,7 +146,6 @@ export class WebSocketService {
 
     try {
       const message = JSON.parse(event.data);
-      console.log('Received WebSocket message:', message); // Debug log
 
       if (this.isValidWebSocketMessage(message)) {
         const { topic, data } = message;
@@ -160,7 +163,6 @@ export class WebSocketService {
                 this.updatePatientData(typedUpdate);
               });
             } else if (this.isVitalsUpdate(data)) {
-              console.log('Processing single vital update:', data); // Debug log
 
               this.updatePatientData(data);
             }

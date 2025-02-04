@@ -7,6 +7,7 @@ import { StatCard, StatCardProps, CriticalStats, CriticalStatsProps } from './St
 interface DraggableProps {
   id: string;
   isLocked?: boolean;
+  className?: string;
 }
 
 export const DraggableStatCard = memo(({
@@ -33,14 +34,18 @@ export const DraggableStatCard = memo(({
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative ${!isLocked ? 'cursor-move' : 'cursor-not-allowed'}`}
+      className={`group relative ${!isLocked ? 'cursor-move' : ''}`}
       {...attributes}
       {...(!isLocked ? listeners : {})}
     >
       <StatCard {...props} />
-      {isLocked && (
+      {isLocked ? (
         <div className="absolute top-2 right-2">
-          <Lock size={16} className="text-gray-400" />
+          <Lock size={16} className="text-gray-400 dark:text-gray-600" />
+        </div>
+      ) : (
+        <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute inset-0 bg-gray-900/5 dark:bg-gray-100/5 rounded-lg" />
         </div>
       )}
     </div>
@@ -73,14 +78,18 @@ export const DraggableCriticalStats = memo(({
     <div
       ref={setNodeRef}
       style={style}
-      className="relative cursor-not-allowed"
+      className={`group relative ${!isLocked ? 'cursor-move' : ''}`}
       {...attributes}
       {...(!isLocked ? listeners : {})}
     >
       <CriticalStats {...props} />
-      {isLocked && (
+      {isLocked ? (
         <div className="absolute top-2 right-2">
-          <Lock size={16} className="text-gray-400" />
+          <Lock size={16} className="text-gray-400 dark:text-gray-600" />
+        </div>
+      ) : (
+        <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute inset-0 bg-gray-900/5 dark:bg-gray-100/5 rounded-lg" />
         </div>
       )}
     </div>
