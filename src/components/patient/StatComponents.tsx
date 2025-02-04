@@ -6,7 +6,6 @@ import {
   Droplet,
   Heart,
 } from "lucide-react";
-import { useTheme } from "../../hooks/useTheme";
 import { CriticalPatients } from "../../types/dashboard";
 
 export interface StatCardProps {
@@ -31,7 +30,6 @@ export const StatCard = memo(
     className,
     onClick,
   }: StatCardProps) => {
-    const { theme } = useTheme();
 
     const getTrendIcon = () => {
       if (!trend) return null;

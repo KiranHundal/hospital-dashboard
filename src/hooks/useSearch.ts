@@ -26,7 +26,7 @@ export const useSearch = (patients: Patient[]) => {
         );
       }
 
-      const match = (value: any) =>
+      const match = (value: unknown) =>
         String(value).toLowerCase().includes(searchValue);
 
       return (
