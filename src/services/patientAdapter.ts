@@ -77,13 +77,18 @@ export const patientAdapter = {
     if (oxygenLevel < 70 || oxygenLevel > 100) {
       throw new ValidationError("Invalid oxygen level");
     }
-
-
     return {
       bloodPressure: `${systolic}/${diastolic}`,
       heartRate,
       oxygenLevel,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      isBPHigh: false,
+      isBPLow: false,
+      isHRHigh: false,
+      isHRLow: false,
+      isO2Low: false,
+      severityScore:0,
     };
+
   },
 };

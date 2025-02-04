@@ -40,7 +40,7 @@ class WebSocketTestClient {
 
         await this.delay(1000);
 
-        this.generatePatients(500);
+        this.generatePatients(5);
 
         await this.delay(2000);
 

@@ -377,23 +377,6 @@ export class WebSocketService {
       }
     );
   }
-
-  private clearRoomHighlights(room: string) {
-    if (!this.queryClient) return;
-
-    this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
-      const clearedPatients = oldData.map(patient => {
-        if (patient.room === room) {
-          return { ...patient, isUpdated: false };
-        }
-        return patient;
-      });
-
-      localStorage.setItem('patients', JSON.stringify(clearedPatients));
-      return clearedPatients;
-    });
-  }
-
   private handleRoomUpdate(data: RoomUpdate) {
     const newRoom = data.roomNumber.toString();
     const updateTime = Date.now();

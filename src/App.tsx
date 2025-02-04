@@ -1,4 +1,3 @@
-import React from "react";
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Dashboard } from "./components/layout/Dashboard/Dashboard";
