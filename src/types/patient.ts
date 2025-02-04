@@ -1,3 +1,4 @@
+
 export interface VitalSigns {
     bloodPressure: string;
     heartRate: number;
@@ -16,7 +17,7 @@ export interface VitalSigns {
     id: string;
     name: string ;
     age: number;
-    gender: "male" | "female" | "other";
+    gender: Gender;
     room: string ;
     vitals: VitalSigns;
     isUpdated?: boolean;

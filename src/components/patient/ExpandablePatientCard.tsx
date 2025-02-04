@@ -48,14 +48,14 @@ const ExpandablePatientCardBase = ({
   const formattedTime = patient?.vitals?.timestamp
     ? new Date(Number(patient.vitals.timestamp)).toLocaleTimeString()
     : "Unknown";
+
   return (
     <div
       className={`
-        rounded-lg shadow-sm overflow-hidden
-        transition-all duration-300 ease-in-out
+        relative rounded-lg shadow-sm bg-white dark:bg-gray-800
         ${isUpdated ? "ring-2 ring-blue-500 ring-opacity-50" : ""}
-        dark:bg-gray-800 bg-white
       `}
+      style={{ isolation: "isolate" }}
     >
       <div className="p-4">
         <div className="flex justify-between items-start">
@@ -121,6 +121,7 @@ const ExpandablePatientCardBase = ({
           overflow-hidden transition-all duration-300
           ${isExpanded ? "max-h-96" : "max-h-0"}
         `}
+        data-testid="expandable-section"
       >
         <div className="p-4 border-t dark:border-gray-700">
           <div className="grid grid-cols-2 gap-4">
@@ -129,7 +130,6 @@ const ExpandablePatientCardBase = ({
               isolation={patient.isolation}
               npo={patient.npo}
             />
-
             <PatientNotes value={notes} onChange={handleNotesChange} />
           </div>
 

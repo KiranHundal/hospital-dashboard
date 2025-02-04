@@ -47,46 +47,59 @@ export class ConfigService {
     return ConfigService.instance;
   }
 
-  private loadConfig(): AppConfig {
-    return {
-      VITALS: {
-        BLOOD_PRESSURE: {
-          SYSTOLIC: {
-            HIGH: Number(import.meta.env.VITE_VITAL_BP_SYSTOLIC_HIGH) || 140,
-            LOW: Number(import.meta.env.VITE_VITAL_BP_SYSTOLIC_LOW) || 90
-          },
-          DIASTOLIC: {
-            HIGH: Number(import.meta.env.VITE_VITAL_BP_DIASTOLIC_HIGH) || 90,
-            LOW: Number(import.meta.env.VITE_VITAL_BP_DIASTOLIC_LOW) || 60
-          }
-        },
-        HEART_RATE: {
-          HIGH: Number(import.meta.env.VITE_VITAL_HR_HIGH) || 100,
-          LOW: Number(import.meta.env.VITE_VITAL_HR_LOW) || 60
-        },
-        OXYGEN_LEVEL: {
-          LOW: Number(import.meta.env.VITE_VITAL_O2_LOW) || 95
+private loadConfig(): AppConfig {
+  const env = (typeof process !== 'undefined' && process.env && process.env.JEST_WORKER_ID !== undefined)
+    ? process.env
+    : (() => {
+        try {
+          return eval("import.meta.env");
+        } catch (_) {
+          return {};
         }
-      },
-      UI: {
-        GRID_BREAKPOINTS: {
-          MOBILE: Number(import.meta.env.VITE_UI_GRID_MOBILE) || 1,
-          TABLET: Number(import.meta.env.VITE_UI_GRID_TABLET) || 2,
-          DESKTOP: Number(import.meta.env.VITE_UI_GRID_DESKTOP) || 4
+      })();
+
+  return {
+    VITALS: {
+      BLOOD_PRESSURE: {
+        SYSTOLIC: {
+          HIGH: Number(env.VITE_VITAL_BP_SYSTOLIC_HIGH) || 140,
+          LOW: Number(env.VITE_VITAL_BP_SYSTOLIC_LOW) || 90,
         },
-        ANIMATIONS: {
-          HIGHLIGHT_DURATION: Number(import.meta.env.VITE_UI_HIGHLIGHT_DURATION) || 2000,
-          FADE_DURATION: Number(import.meta.env.VITE_UI_FADE_DURATION) || 500
-        }
+        DIASTOLIC: {
+          HIGH: Number(env.VITE_VITAL_BP_DIASTOLIC_HIGH) || 90,
+          LOW: Number(env.VITE_VITAL_BP_DIASTOLIC_LOW) || 60,
+        },
       },
-      WEBSOCKET: {
-        URL: import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8080',
-        RECONNECT_INTERVAL: Number(import.meta.env.VITE_WEBSOCKET_RECONNECT_INTERVAL) || 3000,
-        MAX_RECONNECT_ATTEMPTS: Number(import.meta.env.VITE_WEBSOCKET_MAX_RECONNECT_ATTEMPTS) || 5
+      HEART_RATE: {
+        HIGH: Number(env.VITE_VITAL_HR_HIGH) || 100,
+        LOW: Number(env.VITE_VITAL_HR_LOW) || 60,
       },
-      API_URL: import.meta.env.VITE_API_URL || 'https://jsonplaceholder.typicode.com/posts'
-    };
-  }
+      OXYGEN_LEVEL: {
+        LOW: Number(env.VITE_VITAL_O2_LOW) || 95,
+      },
+    },
+    UI: {
+      GRID_BREAKPOINTS: {
+        MOBILE: Number(env.VITE_UI_GRID_MOBILE) || 1,
+        TABLET: Number(env.VITE_UI_GRID_TABLET) || 2,
+        DESKTOP: Number(env.VITE_UI_GRID_DESKTOP) || 4,
+      },
+      ANIMATIONS: {
+        HIGHLIGHT_DURATION: Number(env.VITE_UI_HIGHLIGHT_DURATION) || 2000,
+        FADE_DURATION: Number(env.VITE_UI_FADE_DURATION) || 500,
+      },
+    },
+    WEBSOCKET: {
+      URL: env.VITE_WEBSOCKET_URL || 'ws://localhost:8080',
+      RECONNECT_INTERVAL: Number(env.VITE_WEBSOCKET_RECONNECT_INTERVAL) || 3000,
+      MAX_RECONNECT_ATTEMPTS: Number(env.VITE_WEBSOCKET_MAX_RECONNECT_ATTEMPTS) || 5,
+    },
+    API_URL: env.VITE_API_URL || 'https://jsonplaceholder.typicode.com/posts',
+  };
+}
+
+
+
 
   getConfig(): AppConfig {
     return this.config;

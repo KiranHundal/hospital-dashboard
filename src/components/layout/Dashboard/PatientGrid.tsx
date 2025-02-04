@@ -9,8 +9,8 @@ export const PatientGrid: React.FC<PatientGridProps> = ({
   pagination,
 }) => {
   return (
-    <>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="space-y-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
         {patients.map((patient) => (
           <ExpandablePatientCard
             key={patient.id}
@@ -20,6 +20,6 @@ export const PatientGrid: React.FC<PatientGridProps> = ({
         ))}
       </div>
       <PaginationControls {...pagination} />
-    </>
+    </div>
   );
 };

@@ -1,4 +1,4 @@
-import { Patient, VitalSigns } from "../types/patient";
+import { Gender, Patient, VitalSigns } from "../types/patient";
 import { Post } from "./api";
 import { TransformationError, ValidationError } from "../types/errors";
 
@@ -55,8 +55,8 @@ export const patientAdapter = {
     return `${floor}${room.toString().padStart(2, "0")}`;
   },
 
-  determineGender(postId: number): "male" | "female" {
-    return postId % 2 === 0 ? "male" : "female";
+  determineGender(postId: number): Gender {
+    return postId % 2 === 0 ? Gender.Male : Gender.Female;
   },
 
   generateVitals(seed: number): VitalSigns {
