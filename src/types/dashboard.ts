@@ -1,3 +1,5 @@
+import { Patient } from "./patient";
+
 export interface LayoutItem {
     id: string;
     type: 'stat' | 'critical';
@@ -16,3 +18,22 @@ export interface LayoutItem {
     averageAge: number;
     criticalPatients: CriticalPatients;
   }
+  export interface PaginationProps {
+    currentPage: number;
+    totalPages: number;
+    goToNextPage: () => void;
+    goToPreviousPage: () => void;
+  }
+export interface PatientListProps {
+  patients: Patient[];
+  updatedPatientId?: string;
+  isLoading: boolean;
+  error: Error | null;
+  onResetSortChange: (resetSort: () => void) => void;
+  pagination: PaginationProps;
+}
+export interface PatientGridProps {
+  patients: Patient[];
+  updatedPatientId?: string;
+  pagination: PaginationProps;
+}

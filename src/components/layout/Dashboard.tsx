@@ -16,77 +16,13 @@ import { usePatients } from "../../hooks/queries";
 import { withLoading } from "../../hocs/withLoading";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { SubscriptionTopic } from "../../types/websocket";
-import SortedPatientTable from "../patient/SortedPatientTable";
-import ExpandablePatientCard from "../patient/ExpandablePatientCard";
 import { useTheme } from "../../hooks/useTheme";
 import SplitScreenDashboard from "./SplitScreenDashboard";
-import { Patient } from "../../types/patient";
-import { PaginationControls } from "../ui/PaginationControls";
+import { PatientGrid } from "./PatientGrid";
+import { PatientList } from "./PatientList";
 import { usePagination } from "../../hooks/usePagination";
 
 const PatientSummaryWithLoading = withLoading(PatientSummary);
-
-interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  goToNextPage: () => void;
-  goToPreviousPage: () => void;
-}
-
-interface PatientGridProps {
-  patients: Patient[];
-  updatedPatientId?: string;
-  pagination: PaginationProps;
-}
-
-interface PatientListProps extends PatientGridProps {
-  isLoading: boolean;
-  error: Error | null;
-  onResetSortChange: (resetSort: () => void) => void;
-}
-
-const PatientGrid: React.FC<PatientGridProps> = ({
-  patients,
-  updatedPatientId,
-  pagination,
-}) => {
-  return (
-    <>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {patients.map((patient) => (
-          <ExpandablePatientCard
-            key={patient.id}
-            patient={patient}
-            isUpdated={patient.id === updatedPatientId}
-          />
-        ))}
-      </div>
-      <PaginationControls {...pagination} />
-    </>
-  );
-};
-
-const PatientList: React.FC<PatientListProps> = ({
-  patients,
-  updatedPatientId,
-  isLoading,
-  error,
-  onResetSortChange,
-  pagination,
-}) => {
-  return (
-    <>
-      <SortedPatientTable
-        patients={patients}
-        updatedPatientId={updatedPatientId}
-        isLoading={isLoading}
-        error={error}
-        onResetSortChange={onResetSortChange}
-      />
-      <PaginationControls {...pagination} />
-    </>
-  );
-};
 
 export const Dashboard: React.FC = () => {
   const {
