@@ -3,12 +3,12 @@
 A real-time patient monitoring dashboard built with React, TypeScript, and WebSocket.
 
 ## Features
-- 📊 Real-time vital signs monitoring
-- 🚨 Critical patient alerts
-- 📱 Responsive layout (Grid/List views)
-- 🌓 Dark mode support
-- 🔄 Split screen comparison
-- 🔍 Advanced filtering and sorting
+-  Real-time vital signs monitoring
+-  Critical patient alerts
+-  Responsive layout (Grid/List views)
+-  Dark mode support
+-  Split screen comparison
+-  Advanced filtering and sorting
 
 ## Tech Stack
 - React 18
