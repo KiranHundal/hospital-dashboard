@@ -9,6 +9,11 @@ const queryClient = new QueryClient({
     },
   },
 });
+declare global {
+  interface Window {
+    queryClient: QueryClient;
+  }
+}
 
 if (process.env.NODE_ENV === 'development') {
   window.queryClient = queryClient;

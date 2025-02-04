@@ -12,7 +12,6 @@ interface WebSocketHandlers {
   onDisconnect?: () => void;
   onError?: (error: Error) => void;
 }
-console.log(`Connecting to WebSocket at: ${WEBSOCKET_CONFIG.URL}`);
 
 export class WebSocketService {
   private static instance: WebSocketService | null = null;
@@ -50,7 +49,6 @@ export class WebSocketService {
       this.ws = new WebSocket(WEBSOCKET_CONFIG.URL);
 
       this.ws.onopen = () => {
-        console.log('WebSocket connected');
         this.isConnected = true;
         this.isReconnecting = false;
         this.reconnectAttempts = 0;
@@ -72,7 +70,6 @@ export class WebSocketService {
 
       this.ws.onclose = () => {
         if (this.isConnected) {
-          console.log('WebSocket disconnected');
           this.isConnected = false;
           this.dispatch!(setConnected(false));
           handlers.onDisconnect?.();
@@ -154,7 +151,6 @@ export class WebSocketService {
         switch (topic) {
           case 'vitals':
             if (this.isBatchVitalsUpdate(data)) {
-              console.log('Processing batch vitals update:', data);
               data.updates.forEach(update => {
                 const typedUpdate: WSPatientUpdate = {
                   ...update,
@@ -195,14 +191,12 @@ export class WebSocketService {
 
   private attemptReconnection() {
     if (this.isReconnecting || this.reconnectAttempts >= this.maxRetries) {
-      console.log('Max reconnection attempts reached or already reconnecting');
       return;
     }
 
     this.isReconnecting = true;
     this.reconnectTimeout = setTimeout(() => {
       if (this.reconnectAttempts < this.maxRetries) {
-        console.log(`Reconnection attempt ${this.reconnectAttempts + 1}/${this.maxRetries}`);
         this.reconnectAttempts++;
         this.connect();
       }
@@ -257,7 +251,6 @@ export class WebSocketService {
     if (!this.queryClient) return;
 
     const timestamp = Date.now();
-    console.log('Adding new patient with timestamp:', timestamp);
 
     this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
       const patientExists = oldData.some((p) => p.id === patient.id);
@@ -274,7 +267,6 @@ export class WebSocketService {
       };
 
       const newData = [...oldData, newPatient];
-      console.log('Updated patients after addition:', newData);
       localStorage.setItem('patients', JSON.stringify(newData));
       return newData;
     });
@@ -330,7 +322,6 @@ export class WebSocketService {
     if (!this.queryClient) return;
 
     const updateTime = Date.now();
-    console.log('Updating query cache with timestamp:', updateTime);
 
     this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
       const updatedPatients = oldData.map(patient =>
@@ -343,7 +334,6 @@ export class WebSocketService {
             }
           : patient
       );
-      console.log('Updated patients in cache:', updatedPatients);
       localStorage.setItem('patients', JSON.stringify(updatedPatients));
       return updatedPatients;
     });
@@ -410,7 +400,6 @@ export class WebSocketService {
 
     if (!this.queryClient) return;
 
-    console.log('Handling room update with timestamp:', updateTime);
 
     this.queryClient.setQueryData(QUERY_KEYS.patients, (oldData: Patient[] = []) => {
       const updatedPatients = oldData.map((patient) => {
@@ -428,7 +417,6 @@ export class WebSocketService {
         return patient;
       });
 
-      console.log('Updated patients after room update:', updatedPatients);
       localStorage.setItem('patients', JSON.stringify(updatedPatients));
       return updatedPatients;
     });

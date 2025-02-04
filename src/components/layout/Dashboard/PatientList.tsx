@@ -1,6 +1,6 @@
 import React from "react";
 import { PaginationControls } from "../../ui/PaginationControls";
-import SortedPatientTable from "../../patient/SortedPatientTable";
+import SortedPatientTable from "../../patient/table/SortedPatientTable";
 import { PatientListProps } from "../../../types/dashboard";
 
 export const PatientList: React.FC<PatientListProps> = ({

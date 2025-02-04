@@ -7,8 +7,8 @@ import {
   Unlock,
 } from "lucide-react";
 import { Patient } from "../../../types/patient";
-import VitalsComparison from "../../patient/VitalsComparison";
-import ComparisonNotes from "../../patient/ComparisonNotes";
+import VitalsComparison from "../../patient/splitScreen/VitalsComparison";
+import ComparisonNotes from "../../patient/splitScreen/ComparisonNotes";
 
 interface SplitScreenDashboardProps {
   patients: Patient[];

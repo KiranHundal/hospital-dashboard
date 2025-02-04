@@ -1,4 +1,4 @@
-import { SortConfig } from '../components/shared/SortableData';
+import { SortConfig } from '../components/ui/SortableData';
 
 export type SortFunction = <T>(field: keyof T) => void;
 export type ResetFunction = () => void;

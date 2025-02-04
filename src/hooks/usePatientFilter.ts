@@ -21,7 +21,6 @@ export const usePatientFilter = (patients: Patient[]) => {
   const resetFilters = () => {
     setFilterCriteria({});
     storage.saveFilterCriteria({});
-    console.log("Filter criteria after reset:", filterCriteria);
 
   };
 

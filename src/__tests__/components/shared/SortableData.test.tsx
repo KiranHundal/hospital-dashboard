@@ -1,4 +1,4 @@
-import { SortableData } from "../../../components/shared/SortableData";
+import { SortableData } from "../../../components/ui/SortableData";
 import { Patient } from "../../../types/patient";
 import { render, screen, fireEvent, waitFor } from "../../test-utils";
 import { act } from "@testing-library/react";

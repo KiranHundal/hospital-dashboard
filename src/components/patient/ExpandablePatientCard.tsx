@@ -1,11 +1,17 @@
 import React, { useState, useCallback, memo } from "react";
-import { AlertTriangle, Ban, ChevronDown, ChevronUp, Shield } from "lucide-react";
+import {
+  AlertTriangle,
+  Ban,
+  ChevronDown,
+  ChevronUp,
+  Shield,
+} from "lucide-react";
 import { useVitalSigns } from "../../hooks/useVitalSigns";
-import { StatusIcon } from "../status/StatusIcon";
-import { PatientStatusSection } from "../status/PatientStatusSection";
-import { PatientVitals } from "../vitals/PatientVitals";
-import { PatientInfoSection } from "../info/PatientInfoSection";
-import { PatientNotes } from "../info/PatientNotes";
+import { StatusIcon } from "./status/StatusIcon";
+import { PatientStatusSection } from "./status/PatientStatusSection";
+import { PatientVitals } from "./vitals/PatientVitals";
+import { PatientInfoSection } from "./info/PatientInfoSection";
+import { PatientNotes } from "./info/PatientNotes";
 import type { Patient } from "../../types/patient";
 
 interface ExpandablePatientCardProps {
@@ -40,8 +46,8 @@ const ExpandablePatientCardBase = ({
 
   const isCritical = vitalStatus.severityScore > 0;
   const formattedTime = patient?.vitals?.timestamp
-  ? new Date(Number(patient.vitals.timestamp)).toLocaleTimeString()
-  : 'Unknown';
+    ? new Date(Number(patient.vitals.timestamp)).toLocaleTimeString()
+    : "Unknown";
   return (
     <div
       className={`
@@ -106,7 +112,7 @@ const ExpandablePatientCardBase = ({
         <PatientVitals vitals={patient.vitals} vitalStatus={vitalStatus} />
 
         <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-        Last updated: {formattedTime}
+          Last updated: {formattedTime}
         </div>
       </div>
 

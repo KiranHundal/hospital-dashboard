@@ -41,14 +41,12 @@ const patientSlice = createSlice({
     },
     updatePatient(state, action: PayloadAction<UpdatePatientPayload>) {
       const { patientId, vitals, isUpdated, lastUpdateTime } = action.payload;
-      console.log('Reducer: Updating patient', { patientId, lastUpdateTime }); // Debug log
 
       const patient = state.patients.find((p) => p.id === patientId);
       if (patient) {
         patient.vitals = { ...patient.vitals, ...vitals };
         patient.isUpdated = isUpdated ?? true;
         patient.lastUpdateTime = lastUpdateTime ?? Date.now();
-        console.log('Patient after update:', patient); // Debug log
       }
       state.updatedPatientId = patientId;
       state.lastUpdate = new Date().toISOString();

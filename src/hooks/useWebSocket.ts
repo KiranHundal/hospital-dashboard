@@ -15,11 +15,9 @@ export const useWebSocket = (topics: SubscriptionTopic[] = []) => {
     const cleanup = webSocketService.connect({
       onConnect: () => {
         topics.forEach(topic => webSocketService.subscribe(topic));
-        console.log('WebSocket connection established');
       },
       onDisconnect: () => {
         topics.forEach(topic => webSocketService.unsubscribe(topic));
-        console.log('WebSocket connection lost');
       },
       onError: (error) => {
         console.error('WebSocket error:', error);

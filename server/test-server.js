@@ -32,7 +32,6 @@ const generatePatient = () => ({
 });
 
 server.on('connection', (ws) => {
-  console.log('New client connected');
   clientSubscriptions.set(ws, new Set());
 
   ws.on('message', (message) => {
@@ -42,14 +41,12 @@ server.on('connection', (ws) => {
       if (data.type === 'SUBSCRIBE') {
         const subscriptions = clientSubscriptions.get(ws);
         subscriptions.add(data.topic);
-        console.log('Client subscribed to:', data.topic);
         return;
       }
 
       if (data.type === 'UNSUBSCRIBE') {
         const subscriptions = clientSubscriptions.get(ws);
         subscriptions.delete(data.topic);
-        console.log('Client unsubscribed from:', data.topic);
         return;
       }
 
@@ -57,7 +54,6 @@ server.on('connection', (ws) => {
         const subscriptions = clientSubscriptions.get(ws);
         if (!subscriptions.has('admissions')) {
           subscriptions.add('admissions');
-          console.log('Client auto-subscribed to: admissions');
         }
 
         const batchMessage = {
@@ -105,7 +101,6 @@ server.on('connection', (ws) => {
 
   ws.on('close', () => {
     clientSubscriptions.delete(ws);
-    console.log('Client disconnected');
   });
 });
 

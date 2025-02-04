@@ -27,11 +27,9 @@ export class PatientService {
 
   async fetchPatients(): Promise<PatientServiceResponse> {
     try {
-      console.log("Fetching patients from API...");
 
       const cachedData = this.storage.getPatients();
       if (cachedData.length > 0) {
-        console.log('Using cached data');
         return {
           patients: cachedData,
           totalCount: cachedData.length
