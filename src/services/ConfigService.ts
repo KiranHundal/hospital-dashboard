@@ -53,7 +53,7 @@ private loadConfig(): AppConfig {
     : (() => {
         try {
           return eval("import.meta.env");
-        } catch (_) {
+        } catch {
           return {};
         }
       })();

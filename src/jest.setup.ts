@@ -1,11 +1,15 @@
-global.WebSocket = class {
-  onopen = () => {};
-  onmessage = () => {};
-  onclose = () => {};
-  onerror = () => {};
-  send = jest.fn();
-  close = jest.fn();
-} as any;
+global.WebSocket = jest.fn().mockImplementation(() => ({
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  dispatchEvent: jest.fn(),
+  onopen: null,
+  onmessage: null,
+  onclose: null,
+  onerror: null,
+  send: jest.fn(),
+  close: jest.fn(),
+  readyState: 0,
+})) as unknown as typeof WebSocket;
 
 const localStorageMock = {
   getItem: jest.fn(),
