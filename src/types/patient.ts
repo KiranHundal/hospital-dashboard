@@ -3,6 +3,12 @@ export interface VitalSigns {
     heartRate: number;
     oxygenLevel: number;
     timestamp?: number;
+    isBPHigh: boolean;
+    isBPLow: boolean;
+    isHRHigh: boolean;
+    isHRLow: boolean;
+    isO2Low: boolean;
+    severityScore: number;
 
   }
 
@@ -19,7 +25,7 @@ export interface VitalSigns {
     isolation?: boolean;
     npo?: boolean;
     [key: string]: unknown;
-    
+
   }
 
 

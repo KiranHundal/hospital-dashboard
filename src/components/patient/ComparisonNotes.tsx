@@ -75,7 +75,6 @@ const ComparisonNotes: React.FC<ComparisonNotesProps> = ({ patients }) => {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mt-4">
       <h3 className="text-lg font-semibold mb-4">Comparison Notes</h3>
 
-      {/* Note Input */}
       <div className="flex gap-2 mb-4">
         <textarea
           value={newNote}
@@ -95,7 +94,6 @@ const ComparisonNotes: React.FC<ComparisonNotesProps> = ({ patients }) => {
         </button>
       </div>
 
-      {/* Notes List */}
       <div className="space-y-3">
         {notes.map((note) => (
           <div
