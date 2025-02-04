@@ -28,7 +28,7 @@ A real-time patient monitoring dashboard built with React, TypeScript, and WebSo
 ### Installation
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/hospital-dashboard.git
+git https://github.com/KiranHundal/hospital-dashboard.git
 
 # Install dependencies
 npm install
