@@ -1,22 +1,12 @@
 import VitalSignsService from '../services/VitalSignsService';
-import { VitalSigns } from '../types/patient';
+import { createAbnormalVitals, createPatientFixture } from './utils/patientTestUtils';
 
 describe('VitalSignsService.analyzeVitals', () => {
   const service = VitalSignsService.getInstance();
 
   it('should correctly analyze normal vitals', () => {
-    const vitals: VitalSigns = {
-      bloodPressure: "120/80",
-      heartRate: 70,
-      oxygenLevel: 98,
-      timestamp: 1630000000000,
-      isBPHigh: false,
-      isBPLow: false,
-      isHRHigh: false,
-      isHRLow: false,
-      isO2Low: false,
-      severityScore: 0,
-    };
+    const patient = createPatientFixture();
+    const vitals = patient.vitals;
 
     const analysis = service.analyzeVitals(vitals);
     expect(analysis.severityScore).toBe(0);
@@ -28,20 +18,11 @@ describe('VitalSignsService.analyzeVitals', () => {
   });
 
   it('should correctly analyze abnormal vitals', () => {
-    const vitals: VitalSigns = {
-      bloodPressure: "150/100",
-      heartRate: 110,
-      oxygenLevel: 90,         
-      timestamp: 1630000000000,
-      isBPHigh: false,
-      isBPLow: false,
-      isHRHigh: false,
-      isHRLow: false,
-      isO2Low: false,
-      severityScore: 0,
-    };
+    const patient = createPatientFixture({
+      vitals: createAbnormalVitals('high'),
+    });
 
-    const analysis = service.analyzeVitals(vitals);
+    const analysis = service.analyzeVitals(patient.vitals);
     expect(analysis.isBPHigh).toBe(true);
     expect(analysis.isHRHigh).toBe(true);
     expect(analysis.isO2Low).toBe(true);

@@ -1,70 +1,64 @@
 import { renderHook, act } from '@testing-library/react';
 import { useSearch } from '../hooks/useSearch';
-import { Patient, Gender } from '../types/patient';
+import { createPatientFixtures } from './utils/patientTestUtils';
 
 describe('useSearch hook', () => {
-  const patients: Patient[] = [
-    {
-      id: 'P0001',
-      name: 'Alice',
-      age: 30,
-      room: '101',
-      gender: Gender.Female,
-      vitals: {
-        bloodPressure: "120/80",
-        heartRate: 70,
-        oxygenLevel: 98,
-        timestamp: 1630000000000,
-        isBPHigh: false,
-        isBPLow: false,
-        isHRHigh: false,
-        isHRLow: false,
-        isO2Low: false,
-        severityScore: 0,
-      },
-      fallRisk: false,
-      isolation: false,
-      npo: false,
-    },
-    {
-      id: 'P0002',
-      name: 'Bob',
-      age: 40,
-      room: '102',
-      gender: Gender.Male,
-      vitals: {
-        bloodPressure: "130/85",
-        heartRate: 80,
-        oxygenLevel: 97,
-        timestamp: 1630000000000,
-        isBPHigh: false,
-        isBPLow: false,
-        isHRHigh: false,
-        isHRLow: false,
-        isO2Low: false,
-        severityScore: 0,
-      },
-      fallRisk: false,
-      isolation: false,
-      npo: false,
-    },
-  ];
+  const patients = createPatientFixtures([
+    { name: 'Alice Smith', id: 'P0001', room: '101' },
+    { name: 'Bob Johnson', id: 'P0002', room: '102' },
+    { name: 'Carol Williams', id: 'P0003', room: '103' }
+  ]);
 
-  it('should filter patients based on search term', () => {
+  it('filters patients by full name case-insensitively', () => {
     const { result } = renderHook(() => useSearch(patients));
 
-    expect(result.current.filteredPatients).toHaveLength(2);
-
     act(() => {
-      result.current.setSearchTerm('alice');
+      result.current.setSearchTerm('ALICE');
     });
 
     expect(result.current.filteredPatients).toHaveLength(1);
-    expect(result.current.filteredPatients[0].name).toBe('Alice');
+    expect(result.current.filteredPatients[0].name).toBe('Alice Smith');
+  });
+
+  it('filters patients by partial name', () => {
+    const { result } = renderHook(() => useSearch(patients));
+
+    act(() => {
+      result.current.setSearchTerm('johnson');
+    });
+
+    expect(result.current.filteredPatients).toHaveLength(1);
+    expect(result.current.filteredPatients[0].name).toBe('Bob Johnson');
+  });
+
+  it('filters patients by room number', () => {
+    const { result } = renderHook(() => useSearch(patients));
+
+    act(() => {
+      result.current.setSearchTerm('102');
+    });
+
+    expect(result.current.filteredPatients).toHaveLength(1);
+    expect(result.current.filteredPatients[0].room).toBe('102');
+  });
+
+  it('handles empty search term', () => {
+    const { result } = renderHook(() => useSearch(patients));
 
     act(() => {
       result.current.setSearchTerm('');
     });
-    expect(result.current.filteredPatients).toHaveLength(2);
+
+    expect(result.current.filteredPatients).toHaveLength(3);
+  });
+
+  it('returns empty array for non-matching search', () => {
+    const { result } = renderHook(() => useSearch(patients));
+
+    act(() => {
+      result.current.setSearchTerm('Nonexistent');
+    });
+
+    expect(result.current.filteredPatients).toHaveLength(0);
   });
 });

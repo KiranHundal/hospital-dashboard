@@ -3,7 +3,8 @@ import patientReducer, {
     clearUpdateHighlight,
     setPatients,
 } from '../store/slices/patientSlice';
-import { Patient, Gender } from '../types/patient';
+import { Patient } from '../types/patient';
+import { createPatientFixture } from './utils/patientTestUtils';
 
 describe('patientSlice reducer', () => {
     const initialState = {
@@ -14,73 +15,82 @@ describe('patientSlice reducer', () => {
         lastUpdate: undefined,
     };
 
-    const samplePatient: Patient = {
-        id: 'P0001',
-        name: 'John Doe',
-        age: 50,
-        room: '101',
-        gender: Gender.Male, 
-        vitals: {
-            bloodPressure: "120/80",
-            heartRate: 70,
-            oxygenLevel: 98,
-            timestamp: 1630000000000,
-            isBPHigh: false,
-            isBPLow: false,
-            isHRHigh: false,
-            isHRLow: false,
-            isO2Low: false,
-            severityScore: 0,
-        },
-        fallRisk: false,
-        isolation: false,
-        npo: false,
-    };
+    const samplePatient = createPatientFixture();
 
-    it('should handle setPatients', () => {
-        const patients: Patient[] = [samplePatient];
-        const newState = patientReducer(initialState, setPatients(patients));
-        expect(newState.patients).toHaveLength(1);
-        expect(newState.loading).toBe(false);
+    describe('setPatients action', () => {
+        it('should initialize patients correctly', () => {
+            const patients = [samplePatient, createPatientFixture({ id: 'P0002' })];
+            const newState = patientReducer(initialState, setPatients(patients));
+
+            expect(newState.patients).toHaveLength(2);
+            expect(newState.loading).toBe(false);
+            expect(newState.error).toBeUndefined();
+        });
     });
 
-    it('should handle updatePatient', () => {
-        const state = {
-            patients: [samplePatient],
-            loading: false,
-            error: undefined,
-            updatedPatientId: undefined,
-            lastUpdate: undefined,
-        };
+    describe('updatePatient action', () => {
+        it('should update patient vitals and tracking metadata', () => {
+            const state = {
+                ...initialState,
+                patients: [samplePatient],
+                loading: false,
+            };
 
-        const updateAction = updatePatient({
-            patientId: 'P0001',
-            vitals: { heartRate: 80 },
-            isUpdated: true,
-            lastUpdateTime: 1630001000000,
+            const updateAction = updatePatient({
+                patientId: samplePatient.id,
+                vitals: { heartRate: 80 },
+                isUpdated: true,
+                lastUpdateTime: 1630001000000,
+            });
+
+            const newState = patientReducer(state, updateAction);
+
+            expect(newState.patients[0].vitals.heartRate).toBe(80);
+            expect(newState.updatedPatientId).toBe(samplePatient.id);
         });
 
-        const newState = patientReducer(state, updateAction);
-        expect(newState.patients[0].vitals.heartRate).toBe(80);
-        expect(newState.updatedPatientId).toBe('P0001');
+        it('should handle multiple patient updates', () => {
+            const patient1 = createPatientFixture({ id: 'P0001' });
+            const patient2 = createPatientFixture({ id: 'P0002' });
+
+            const state = {
+                ...initialState,
+                patients: [patient1, patient2],
+                loading: false,
+            };
+
+            const updateAction = updatePatient({
+                patientId: 'P0002',
+                vitals: { heartRate: 90 },
+                isUpdated: true,
+                lastUpdateTime: 1630001000000,
+            });
+
+            const newState = patientReducer(state, updateAction);
+
+            expect(newState.patients.find(p => p.id === 'P0002')?.vitals.heartRate).toBe(90);
+            expect(newState.updatedPatientId).toBe('P0002');
+        });
     });
 
-    it('should handle clearUpdateHighlight', () => {
-        const state = {
-            patients: [{
-                ...samplePatient,
-                isUpdated: true,
-            }],
-            loading: false,
-            error: undefined,
-            updatedPatientId: 'P0001',
-            lastUpdate: '2021-08-26T00:00:00.000Z',
-        };
+    describe('clearUpdateHighlight action', () => {
+        it('should reset update-related state', () => {
+            const state = {
+                patients: [
+                    {...samplePatient, isUpdated: true}
+                ],
+                loading: false,
+                error: undefined,
+                updatedPatientId: samplePatient.id,
+                lastUpdate: '2021-08-26T00:00:00.000Z',
+            };
 
-        const newState = patientReducer(state, clearUpdateHighlight());
-        expect(newState.updatedPatientId).toBeUndefined();
-        newState.patients.forEach(patient => {
-            expect(patient.isUpdated).toBeFalsy();
+            const newState = patientReducer(state, clearUpdateHighlight());
+
+            expect(newState.updatedPatientId).toBeUndefined();
+            newState.patients.forEach(patient => {
+                expect(patient.isUpdated).toBeFalsy();
+            });
         });
     });
 });

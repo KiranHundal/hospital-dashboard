@@ -1,123 +1,93 @@
 import "@testing-library/jest-dom";
 import { render, fireEvent, screen } from "@testing-library/react";
-import { Patient, Gender } from "../types/patient";
 import ExpandablePatientCard from "../components/patient/ExpandablePatientCard";
+import { createPatientFixture } from "./utils/patientTestUtils";
 
-describe("ExpandablePatientCard component", () => {
-  const patient: Patient = {
-    id: "P0001",
-    name: "Jane Doe",
-    age: 60,
-    room: "101",
-    gender: Gender.Female,
-    vitals: {
-      bloodPressure: "130/85",
-      heartRate: 75,
-      oxygenLevel: 97,
-      timestamp: 1630000000000,
-      isBPHigh: false,
-      isBPLow: false,
-      isHRHigh: false,
-      isHRLow: false,
-      isO2Low: false,
-      severityScore: 0,
-    },
-    fallRisk: false,
-    isolation: false,
-    npo: false,
-  };
+describe("ExpandablePatientCard", () => {
+  const defaultPatient = createPatientFixture({
+    name: 'Jane Doe',
+    age: 45,
+    room: '101'
+  });
 
-  it("renders patient info and toggles details", () => {
-    render(<ExpandablePatientCard patient={patient} />);
+  describe('Basic Rendering', () => {
+    it("displays patient basic information", () => {
+        render(<ExpandablePatientCard patient={defaultPatient} />);
 
-    expect(screen.getByText(/Jane Doe/i)).toBeInTheDocument();
+        expect(screen.getByText(/Jane Doe/i)).toBeInTheDocument();
+        expect(screen.getByText(/45/)).toBeInTheDocument();
 
-    const toggleButton = screen.getByRole("button", {
-      name: /expand details/i,
+        expect(screen.getByText("101")).toBeInTheDocument();
     });
-    expect(toggleButton).toBeInTheDocument();
 
-    const expandableSection = screen.getByTestId("expandable-section");
-    expect(expandableSection).toHaveClass("max-h-0");
+    it("shows patient vitals information", () => {
+      render(<ExpandablePatientCard patient={defaultPatient} />);
 
-    fireEvent.click(toggleButton);
-    expect(expandableSection).toHaveClass("max-h-96");
-    expect(toggleButton).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText(/Vital Trends/i)).toBeInTheDocument();
-
-    fireEvent.click(toggleButton);
-    expect(expandableSection).toHaveClass("max-h-0");
-    expect(toggleButton).toHaveAttribute("aria-expanded", "false");
+      expect(screen.getByText("120/80")).toBeInTheDocument();
+      expect(screen.getByText(/70 bpm/)).toBeInTheDocument();
+      expect(screen.getByText(/98%/)).toBeInTheDocument();
+    });
   });
 
+  describe('Expandable Functionality', () => {
+    it("toggles expandable section correctly", () => {
+      render(<ExpandablePatientCard patient={defaultPatient} />);
 
-  it("displays critical status when severity score is high", () => {
-    const criticalPatient = {
-      ...patient,
-      vitals: {
-        ...patient.vitals,
-        bloodPressure: "180/120",
-        heartRate: 120,
-        oxygenLevel: 88,
-        severityScore: 3,
-        isBPHigh: true,
-        isHRHigh: true,
-        isO2Low: true,
-      },
-    };
+      const toggleButton = screen.getByRole("button", { name: /expand details/i });
+      const expandableSection = screen.getByTestId("expandable-section");
 
-    render(<ExpandablePatientCard patient={criticalPatient} />);
+      expect(expandableSection).toHaveClass("max-h-0");
+      expect(toggleButton).toHaveAttribute("aria-expanded", "false");
 
-    const criticalBadge = screen.getByText("Critical");
-    expect(criticalBadge).toBeInTheDocument();
-    expect(criticalBadge).toHaveClass("bg-red-100", "text-red-800");
-  });
-  it("shows vital status indicators correctly", () => {
-    const criticalPatient = {
-      ...patient,
-      vitals: {
-        ...patient.vitals,
-        bloodPressure: "180/120",
-        heartRate: 120,
-        oxygenLevel: 88,
-        severityScore: 3,
-        isBPHigh: true,
-        isHRHigh: true,
-        isO2Low: true,
-      },
-    };
+      fireEvent.click(toggleButton);
+      expect(expandableSection).toHaveClass("max-h-96");
+      expect(toggleButton).toHaveAttribute("aria-expanded", "true");
 
-    render(<ExpandablePatientCard patient={criticalPatient} />);
-
-    expect(screen.getByText("180/120")).toHaveClass("text-red-600");
-    expect(screen.getByText(/120 bpm/)).toHaveClass("text-red-600");
-    expect(screen.getByText(/88%/)).toHaveClass("text-red-600");
+      fireEvent.click(toggleButton);
+      expect(expandableSection).toHaveClass("max-h-0");
+      expect(toggleButton).toHaveAttribute("aria-expanded", "false");
+    });
   });
 
-  it("renders status icons when conditions are true", () => {
-    const patientWithConditions = {
-      ...patient,
-      fallRisk: true,
-      isolation: true,
-      npo: true,
-    };
+  describe('Critical Status Indicators', () => {
+    it("shows critical badge and red indicators for high severity", () => {
+      const criticalPatient = createPatientFixture({
+        vitals: {
+          bloodPressure: "180/120",
+          heartRate: 110,
+          oxygenLevel: 88,
+          severityScore: 3,
+          isBPHigh: true,
+          isBPLow: false,
+          isHRHigh: true,
+          isHRLow: false,
+          isO2Low: true,
+          timestamp: 1630000000000,
+        }
+      });
 
-    render(<ExpandablePatientCard patient={patientWithConditions} />);
+      render(<ExpandablePatientCard patient={criticalPatient} />);
 
-    const fallRiskIcon = screen.getByLabelText("Fall Risk");
-    const isolationIcon = screen.getByLabelText("Isolation Required");
-    const npoIcon = screen.getByLabelText("NPO (Nothing by Mouth)");
+      const criticalBadge = screen.getByText("Critical");
+      expect(criticalBadge).toHaveClass("bg-red-100", "text-red-800");
 
-    expect(fallRiskIcon).toBeInTheDocument();
-    expect(isolationIcon).toBeInTheDocument();
-    expect(npoIcon).toBeInTheDocument();
-  });
+      expect(screen.getByText("180/120")).toHaveClass("text-red-600");
+      expect(screen.getByText(/110 bpm/)).toHaveClass("text-red-600");
+      expect(screen.getByText(/88%/)).toHaveClass("text-red-600");
+    });
 
-  it("shows patient vitals information", () => {
-    render(<ExpandablePatientCard patient={patient} />);
+    it("renders status icons when conditions are present", () => {
+      const complexPatient = createPatientFixture({
+        fallRisk: true,
+        isolation: true,
+        npo: true
+      });
 
-    expect(screen.getByText("130/85")).toBeInTheDocument();
-    expect(screen.getByText(/75 bpm/)).toBeInTheDocument();
-    expect(screen.getByText(/97%/)).toBeInTheDocument();
+      render(<ExpandablePatientCard patient={complexPatient} />);
+
+      expect(screen.getByLabelText("Fall Risk")).toBeInTheDocument();
+      expect(screen.getByLabelText("Isolation Required")).toBeInTheDocument();
+      expect(screen.getByLabelText("NPO (Nothing by Mouth)")).toBeInTheDocument();
+    });
   });
 });
