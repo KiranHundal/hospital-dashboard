@@ -1,4 +1,6 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { buttonStyles } from "../../styles";
+import clsx from "clsx";
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -21,22 +23,25 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
         <button
           onClick={goToPreviousPage}
           disabled={currentPage === 1}
-          className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
-            text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800
-            border border-gray-300 dark:border-gray-600
-            hover:bg-gray-50 dark:hover:bg-gray-700
-            disabled:opacity-50 disabled:cursor-not-allowed"
+          className={clsx(
+            buttonStyles.pagination.base,
+            buttonStyles.pagination.primary,
+            buttonStyles.pagination.hover,
+            buttonStyles.pagination.disabled
+          )}
         >
           Previous
         </button>
         <button
           onClick={goToNextPage}
           disabled={currentPage === totalPages}
-          className="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
-            text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800
-            border border-gray-300 dark:border-gray-600
-            hover:bg-gray-50 dark:hover:bg-gray-700
-            disabled:opacity-50 disabled:cursor-not-allowed"
+          className={clsx(
+            buttonStyles.pagination.base,
+            buttonStyles.pagination.primary,
+            buttonStyles.pagination.hover,
+            buttonStyles.pagination.disabled,
+            "ml-3"
+          )}
         >
           Next
         </button>
@@ -44,12 +49,15 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-gray-700 dark:text-gray-300">
-            Showing page <span className="font-medium">{currentPage}</span> of{' '}
+            Showing page <span className="font-medium">{currentPage}</span> of{" "}
             <span className="font-medium">{totalPages}</span>
           </p>
         </div>
         <div>
-          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+          <nav
+            className="isolate inline-flex -space-x-px rounded-md shadow-sm"
+            aria-label="Pagination"
+          >
             <button
               onClick={goToPreviousPage}
               disabled={currentPage === 1}

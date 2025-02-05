@@ -1,6 +1,7 @@
 import { AlertTriangle, Shield, Ban } from "lucide-react";
 import { StatusListItem } from "./StatusListItem";
 import type { Patient } from "../../../types/patient";
+import { styles } from "../../../styles";
 
 type PatientStatusSectionProps = Pick<
   Patient,
@@ -13,29 +14,27 @@ export const PatientStatusSection = ({
   npo,
 }: PatientStatusSectionProps) => (
   <div>
-    <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-      Patient Status
-    </h4>
-    <ul className="space-y-2">
+    <h4 className={styles.status.container.title}>Patient Status</h4>
+    <ul className={styles.status.container.list}>
       {fallRisk && (
         <StatusListItem
           icon={AlertTriangle}
           text="Fall Risk"
-          color="text-yellow-600 dark:text-yellow-400"
+          color={styles.status.icon.yellow}
         />
       )}
       {isolation && (
         <StatusListItem
           icon={Shield}
           text="Isolation Required"
-          color="text-purple-600 dark:text-purple-400"
+          color={styles.status.icon.purple}
         />
       )}
       {npo && (
         <StatusListItem
           icon={Ban}
           text="NPO (Nothing by Mouth)"
-          color="text-red-600 dark:text-red-400"
+          color={styles.status.icon.red}
         />
       )}
     </ul>

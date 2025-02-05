@@ -1,9 +1,8 @@
-import { RefreshCw } from "lucide-react";
-import { useState } from "react";
-
-interface RefreshButtonProps {
-  onClick: () => void | Promise<void>;
-}
+import { useState } from 'react';
+import { RefreshButtonProps } from '../../types/header';
+import clsx from 'clsx';
+import { RefreshCw } from 'lucide-react';
+import { buttonStyles } from '../../styles/shared';
 
 export const RefreshButton = ({ onClick }: RefreshButtonProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
@@ -22,13 +21,14 @@ export const RefreshButton = ({ onClick }: RefreshButtonProps) => {
   return (
     <button
       onClick={handleClick}
-      className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+      className={buttonStyles.variants.icon}
       aria-label="Refresh data"
     >
       <RefreshCw
-        className={`w-4 h-4 text-gray-600 dark:text-gray-400 ${
-          isSpinning ? 'animate-spin' : ''
-        }`}
+        className={clsx(
+          buttonStyles.icon.base,
+          isSpinning && buttonStyles.icon.spinning
+        )}
       />
     </button>
   );

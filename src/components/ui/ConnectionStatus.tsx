@@ -1,12 +1,23 @@
-interface ConnectionStatusProps {
-    isConnected: boolean;
-  }
+import { layoutStyles } from "../../styles";
+import { colorStyles } from "../../styles/colors";
+import clsx from "clsx";
 
-  export const ConnectionStatus = ({ isConnected }: ConnectionStatusProps) => (
-    <div className="flex items-center">
-      <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-      <span className="ml-2 text-sm text-gray-600">
-        {isConnected ? 'Connected' : 'Disconnected'}
-      </span>
-    </div>
-  );
+interface ConnectionStatusProps {
+  isConnected: boolean;
+}
+
+export const ConnectionStatus = ({ isConnected }: ConnectionStatusProps) => (
+  <div className="flex items-center">
+    <div
+      className={clsx(
+        layoutStyles.status.dot.base,
+        isConnected
+          ? layoutStyles.status.dot.connected
+          : layoutStyles.status.dot.disconnected
+      )}
+    ></div>
+    <span className={clsx(colorStyles.text.muted, "ml-2 text-sm")}>
+      {isConnected ? "Connected" : "Disconnected"}
+    </span>
+  </div>
+);

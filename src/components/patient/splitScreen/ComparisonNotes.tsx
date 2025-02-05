@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Save, Clock } from "lucide-react";
 import { Patient } from "../../../types/patient";
+import { buttonStyles, styles } from "../../../styles";
+import clsx from "clsx";
 
 interface ComparisonNote {
   id: string;
@@ -74,57 +76,53 @@ const ComparisonNotes: React.FC<ComparisonNotesProps> = ({ patients }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mt-4">
-      <h3 className="text-lg font-semibold mb-4">Comparison Notes</h3>
-
+    <div className={styles.comparison.container}>
       <div className="flex gap-2 mb-4">
         <textarea
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           placeholder="Add observation note..."
-          className="flex-1 p-2 border rounded dark:bg-gray-700 dark:border-gray-600
-                   dark:text-white resize-none"
+          className={styles.comparison.notes.input}
           rows={2}
         />
         <button
           onClick={handleAddNote}
           disabled={!newNote.trim()}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600
-                   disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className={clsx(
+            buttonStyles.search.base,
+            buttonStyles.search.primary,
+            buttonStyles.pagination.disabled
+          )}
         >
           <Save size={20} />
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className={styles.comparison.notes.container}>
         {notes.map((note) => (
-          <div
-            key={note.id}
-            className="p-3 bg-gray-50 dark:bg-gray-700 rounded border
-                     border-gray-200 dark:border-gray-600"
-          >
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
+          <div key={note.id} className={styles.comparison.notes.item}>
+            <div className={styles.comparison.notes.timestamp}>
               <Clock size={14} />
               <span>{formatTime(note.timestamp)}</span>
             </div>
             <p className="text-gray-700 dark:text-gray-200">{note.text}</p>
-            <div className="flex justify-end mt-2">
+            <div className={styles.comparison.notes.actions}>
               <button
                 onClick={() => handleDeleteNote(note.id)}
-                className="text-sm text-red-500 hover:text-red-600"
+                className={buttonStyles.patient.delete}
               >
                 Delete
               </button>
             </div>
           </div>
         ))}
-      </div>
 
-      {notes.length === 0 && (
-        <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-          No comparison notes yet
-        </p>
-      )}
+        {notes.length === 0 && (
+          <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+            No comparison notes yet
+          </p>
+        )}
+      </div>
     </div>
   );
 };

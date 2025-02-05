@@ -7,6 +7,8 @@ import {
   Heart,
 } from "lucide-react";
 import { CriticalPatients } from "../../types/dashboard";
+import { styles } from "../../styles";
+import clsx from "clsx";
 
 export interface StatCardProps {
   title: string;
@@ -30,62 +32,76 @@ export const StatCard = memo(
     className,
     onClick,
   }: StatCardProps) => {
-
     const getTrendIcon = () => {
       if (!trend) return null;
       if (trend === "up")
-        return <TrendingUp className="text-yellow-500" size={20} />;
+        return (
+          <TrendingUp
+            className={styles.stat.critical.details.icon.red}
+            size={20}
+          />
+        );
       if (trend === "down")
-        return <TrendingDown className="text-green-500" size={20} />;
+        return (
+          <TrendingDown
+            className={styles.stat.critical.details.icon.blue}
+            size={20}
+          />
+        );
       return null;
     };
 
-    const getBorderColor = () => {
-      if (highlight) return "border-l-4 border-red-500 dark:border-red-400";
-      if (trend === "up")
-        return "border-r-4 border-amber-500 dark:border-amber-400";
-      if (trend === "down")
-        return "border-r-4 border-emerald-500 dark:border-emerald-400";
-      return "border border-gray-200 dark:border-gray-700";
+    const getBorderStyle = () => {
+      if (highlight) return styles.stat.card.borders.highlight;
+      if (trend === "up") return styles.stat.card.borders.trend.up;
+      if (trend === "down") return styles.stat.card.borders.trend.down;
+      return styles.stat.card.borders.default;
     };
     return (
       <div
-        className={`
-          h-40 p-6 rounded-lg shadow-sm transition-all
-          ${getBorderColor()}
-          ${highlight ? 'animate-pulse bg-red-50 dark:bg-red-900/20' : 'bg-white dark:bg-gray-800'}
-          ${onClick ? 'cursor-pointer hover:shadow-md' : ''}
-          ${className || ''}
-        `}
+        className={clsx(
+          styles.stat.card.base,
+          getBorderStyle(),
+          highlight
+            ? styles.stat.card.backgrounds.highlight
+            : styles.stat.card.backgrounds.default,
+          onClick && "cursor-pointer hover:shadow-md",
+          className
+        )}
         onClick={onClick}
       >
-        <div className="flex h-full flex-col justify-between">
-          <div className="flex justify-between items-start">
+        <div className={styles.stat.card.container}>
+          <div className={styles.stat.card.content.wrapper}>
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate">
-                {title}
-              </h3>
-              <p className={`mt-2 text-2xl font-bold ${
-                highlight ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'
-              }`}>
+              <h3 className={styles.stat.card.content.header}>{title}</h3>
+              <p
+                className={clsx(
+                  styles.stat.card.content.value,
+                  highlight
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-gray-900 dark:text-gray-100"
+                )}
+              >
                 {value}
               </p>
             </div>
             <div className="flex items-center space-x-2">
               {getTrendIcon()}
-              {icon && <div className="text-gray-400 dark:text-gray-500">{icon}</div>}
+              {icon && (
+                <div className="text-gray-400 dark:text-gray-500">{icon}</div>
+              )}
             </div>
           </div>
           {description && (
-            <p className="mt-auto text-sm text-gray-500 dark:text-gray-400">
+            <p className={styles.stat.card.content.description}>
               {description}
             </p>
           )}
         </div>
       </div>
     );
-  });
-
+  }
+);
 
 StatCard.displayName = "StatCard";
 
@@ -104,21 +120,21 @@ export const CriticalStats = memo(
         label: "High BP",
         value: stats.criticalPatients.highBP,
         icon: <Thermometer size={16} />,
-        color: "text-red-500 dark:text-red-400",
+        color: styles.stat.critical.details.icon.red,
         filterKey: "highBP",
       },
       {
         label: "Low O₂",
         value: stats.criticalPatients.lowO2,
         icon: <Droplet size={16} />,
-        color: "text-blue-500 dark:text-blue-400",
+        color: styles.stat.critical.details.icon.blue,
         filterKey: "lowOxygen",
       },
       {
         label: "Low HR",
         value: stats.criticalPatients.lowHR,
         icon: <Heart size={16} />,
-        color: "text-pink-500 dark:text-pink-400",
+        color: styles.stat.critical.details.icon.pink,
         filterKey: "abnormalHeartRate",
       },
     ].filter((detail) => detail.value > 0);
@@ -130,43 +146,36 @@ export const CriticalStats = memo(
 
     return (
       <div
-        className={`
-        h-40 p-6 rounded-lg shadow-sm transition-all
-        border-l-4 border-red-500 dark:border-red-400
-        ${
+        className={clsx(
+          styles.stat.critical.container,
           highlight
-            ? "animate-pulse bg-red-50 dark:bg-red-900/20"
-            : "bg-white dark:bg-gray-800"
-        }
-        ${onClick ? "cursor-pointer hover:shadow-md" : ""}
-      `}
+            ? styles.stat.card.backgrounds.highlight
+            : styles.stat.card.backgrounds.default,
+          onClick && "cursor-pointer hover:shadow-md"
+        )}
         onClick={onClick}
       >
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Critical Vitals
-            </h3>
-            <p className="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">
-              {totalCritical}
-            </p>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <h3 className={styles.stat.critical.header}>Critical Vitals</h3>
+            <p className={styles.stat.critical.value}>{totalCritical}</p>
+            <p className={styles.stat.card.content.description}>
               Requires Attention
             </p>
           </div>
 
           {criticalDetails.length > 0 && (
-            <div className="space-y-3">
+            <div className={styles.stat.critical.details.container}>
               {criticalDetails.map((detail) => (
                 <div
                   key={detail.label}
-                  className="flex items-center gap-2 text-sm"
+                  className={styles.stat.critical.details.item}
                 >
-                  <span className={`${detail.color}`}>{detail.icon}</span>
+                  <span className={detail.color}>{detail.icon}</span>
                   <span className="text-gray-600 dark:text-gray-300">
                     {detail.label}
                   </span>
-                  <span className={`font-medium ${detail.color}`}>
+                  <span className={clsx("font-medium", detail.color)}>
                     {detail.value}
                   </span>
                 </div>

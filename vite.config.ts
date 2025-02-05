@@ -8,23 +8,24 @@ const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  return {  plugins: [
-    react(),
-    generateFile({
-      output: 'build-meta.json',
-      type: 'json',
-      data: {
-        version: APP_VERSION,
-        buildTime: BUILD_TIMESTAMP,
-      },
-    }),
-    qrcode(),
-  ],
-  server: {
-    host: true,
-  },
-  define: {
-    __APP_ENV__: env.APP_ENV
-  }
-}
+  return {
+    plugins: [
+      react(),
+      generateFile({
+        output: 'build-meta.json',
+        type: 'json',
+        data: {
+          version: APP_VERSION,
+          buildTime: BUILD_TIMESTAMP,
+        },
+      }),
+      qrcode(),
+    ],
+    server: {
+      host: true,
+    },
+    define: {
+      __APP_ENV__: env.APP_ENV,
+    },
+  };
 });

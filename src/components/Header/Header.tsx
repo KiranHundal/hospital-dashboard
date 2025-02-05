@@ -13,6 +13,7 @@ import {
   BuildInfo,
 } from ".";
 import { ConnectionButton } from "./ConnectionButton";
+import { layoutStyles } from "../../styles/layout";
 export const Header = ({
   isConnected,
   lastUpdate,
@@ -67,10 +68,10 @@ export const Header = ({
   };
 
   return (
-    <header className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-      <div className="w-full max-w-screen-2xl mx-auto">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
+    <header className={layoutStyles.header.wrapper}>
+      <div className={layoutStyles.header.container}>
+        <div className={layoutStyles.header.content}>
+          <div className={layoutStyles.header.flex}>
             <HeaderTitle
               isConnected={wsConnected}
               formattedDate={formattedDate}
@@ -84,7 +85,7 @@ export const Header = ({
                 onDisconnect={handleDisconnect}
               />
 
-              <div className="h-6 mx-2 border-l border-gray-200 dark:border-gray-700" />
+              <div className={layoutStyles.header.divider} />
 
               <ViewControls
                 layout={layout}

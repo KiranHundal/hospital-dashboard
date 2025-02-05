@@ -4,6 +4,8 @@ import { PatientRow } from "./PatientRow";
 import { useTheme } from "../../../hooks/useTheme";
 import { SortedTableHeader, Column } from "./SortedTableHeader";
 import { SortConfig } from "../../../types/sorting";
+import { styles } from "../../../styles";
+import clsx from "clsx";
 
 interface PatientTableProps {
   patients: Patient[];
@@ -35,17 +37,22 @@ export const PatientTable: React.FC<PatientTableProps> = ({
   ];
 
   return (
-    <div className="overflow-hidden rounded-lg transition-colors duration-300">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+    <div className={styles.table.content.wrapper}>
+      <table
+        className={clsx(styles.table.table.base, styles.table.table.divider)}
+      >
         <SortedTableHeader
           columns={columns}
           sortConfig={sortConfig}
           onSort={onSort}
         />
         <tbody
-          className={`${
-            theme === "dark" ? "bg-slate-900" : "bg-white"
-          } transition-colors duration-300`}
+          className={clsx(
+            "transition-colors duration-300",
+            theme === "dark"
+              ? styles.table.content.background.dark
+              : styles.table.content.background.light
+          )}
         >
           {patients.map((patient) => (
             <PatientRow

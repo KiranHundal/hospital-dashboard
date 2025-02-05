@@ -2,6 +2,7 @@ import React from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Patient } from "../../../types/patient";
 import { SortConfig } from "../../../types/sorting";
+import { styles } from "../../../styles";
 
 export interface Column {
   field: keyof Patient | "vitals";
@@ -30,9 +31,9 @@ export const SortedTableHeader: React.FC<SortedTableHeaderProps> = ({
               if (column.sortable) onSort(column.field);
             }}
             style={{ cursor: column.sortable ? "pointer" : "default" }}
-            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            className={styles.table.header.cell}
           >
-            <div className="flex items-center">
+            <div className={styles.table.header.content}>
               {column.label}
               {column.sortable &&
                 sortConfig?.field === column.field &&

@@ -1,3 +1,6 @@
+import { styles } from "../../../styles";
+import clsx from "clsx";
+
 interface VitalSignProps {
   label: string;
   value: string | number;
@@ -12,16 +15,12 @@ export const VitalSign = ({
   unit = "",
 }: VitalSignProps) => (
   <div
-    className={`
-      text-sm
-      ${
-        isAbnormal
-          ? "text-red-600 dark:text-red-400"
-          : "text-gray-600 dark:text-gray-300"
-      }
-    `}
+    className={clsx(
+      styles.vital.sign.base,
+      isAbnormal ? styles.vital.sign.abnormal : styles.vital.sign.normal
+    )}
   >
-    <span className="font-medium">{label}:</span> {value}
+    <span className={styles.vital.sign.label}>{label}:</span> {value}
     {unit}
   </div>
 );

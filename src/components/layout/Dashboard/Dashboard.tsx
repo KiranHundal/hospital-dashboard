@@ -14,7 +14,8 @@ import SplitScreenDashboard from "./SplitScreenDashboard";
 import { useLayoutManager } from "../../../hooks/useLayoutManager";
 import { useWebSocketManager } from "../../../hooks/useWebSocketManager";
 import { useFilterManager } from "../../../hooks/useFilterManager";
-
+import { styles } from "../../../styles";
+import clsx from "clsx";
 const PatientSummaryWithLoading = withLoading(PatientSummary);
 
 export const Dashboard: React.FC = () => {
@@ -87,12 +88,15 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen ${colors.background}`}>
+    <div className={clsx(styles.dashboard.container.base, colors.background)}>
       <div
-        className={`sticky top-0 z-40 ${colors.cardBg} shadow-sm backdrop-blur`}
+        className={clsx(
+          styles.dashboard.container.header.wrapper,
+          colors.cardBg
+        )}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+        <div className={styles.dashboard.container.header.container}>
+          <div className={styles.dashboard.container.header.content}>
             <Header
               patientCount={searchedPatients.length}
               isConnected={isConnected}
@@ -111,7 +115,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className={styles.dashboard.container.main.container}>
         <PatientSummaryWithLoading
           patients={searchedPatients}
           onFilterChange={setFilterCriteria}
@@ -119,7 +123,7 @@ export const Dashboard: React.FC = () => {
           error={error}
         />
 
-        <div className="mt-6">
+        <div className={styles.dashboard.container.main.section}>
           <SearchAndFilterBar
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -128,7 +132,9 @@ export const Dashboard: React.FC = () => {
             onFilter={() => setFilterPanelOpen(true)}
           />
 
-          <div className="mt-6">{renderContent()}</div>
+          <div className={styles.dashboard.container.main.section}>
+            {renderContent()}
+          </div>
         </div>
       </div>
 

@@ -9,6 +9,8 @@ import {
 import { Patient } from "../../../types/patient";
 import useVitalSigns from "../../../hooks/useVitalSigns";
 import useTheme from "../../../hooks/useTheme";
+import { buttonStyles, styles } from "../../../styles";
+import clsx from "clsx";
 
 interface PatientRowProps {
   patient: Patient;
@@ -34,87 +36,83 @@ export const PatientRow: React.FC<PatientRowProps> = ({
     return isNaN(date.getTime()) ? "" : date.toLocaleTimeString();
   };
 
-  const getBackgroundColor = () => {
-    if (isUpdated) return theme === "dark" ? "bg-blue-900/20" : "bg-blue-50";
-    if (isCritical) return theme === "dark" ? "bg-red-900/20" : "bg-red-50";
-    return theme === "dark" ? "bg-slate-900" : "bg-white";
-  };
-
   return (
     <>
       <tr
-        className={`
-          ${getBackgroundColor()}
-          transition-colors duration-500
-          ${theme === "dark" ? "hover:bg-slate-800" : "hover:bg-gray-50"}
-
-        `}
+        className={clsx(
+          styles.table.body.row.base,
+          isUpdated && styles.table.body.row.updated,
+          isCritical && styles.table.body.row.critical,
+          theme === "dark" ? "hover:bg-slate-800" : "hover:bg-gray-50"
+        )}
       >
-        <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <td className={styles.table.body.cell.base}>
           <div className="flex items-center space-x-2">
-            <span className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
+            <span className={theme === "dark" ? "text-white" : "text-gray-900"}>
               {patient.id}
             </span>
             {isCritical && (
-              <span className={theme === 'dark' ? 'text-red-400' : 'text-red-600'}>
-                Critical
-              </span>
+               <span className={styles.expandable.card.header.badge}>
+               Critical
+             </span>
             )}
           </div>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <td className={styles.table.body.cell.base}>
           <span className={colors.text.primary}>{patient.name}</span>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <td className={styles.table.body.cell.base}>
           <span className={colors.text.primary}>{patient.room}</span>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <td className={styles.table.body.cell.base}>
           <div className={colors.text.primary}>{patient.age}</div>
           <div className={colors.text.secondary}>{patient.gender}</div>
         </td>
         <td
-          className={`px-6 py-4 whitespace-nowrap text-sm ${
+          className={clsx(
+            styles.table.body.cell.base,
             vitalStatus.isBPHigh || vitalStatus.isBPLow
               ? colors.critical.text
               : colors.text.primary
-          }`}
+          )}
         >
           BP: {patient.vitals.bloodPressure}
         </td>
         <td
-          className={`px-6 py-4 whitespace-nowrap text-sm ${
+          className={clsx(
+            styles.table.body.cell.base,
             vitalStatus.isO2Low ? colors.critical.text : colors.text.primary
-          }`}
+          )}
         >
           O₂: {patient.vitals.oxygenLevel}%
         </td>
         <td
-          className={`px-6 py-4 whitespace-nowrap text-sm ${
+          className={clsx(
+            styles.table.body.cell.base,
             vitalStatus.isHRHigh || vitalStatus.isHRLow
               ? colors.critical.text
               : colors.text.primary
-          }`}
+          )}
         >
           HR: {patient.vitals.heartRate} bpm
         </td>
         <td
-          className={`px-6 py-4 whitespace-nowrap text-sm ${colors.text.secondary}`}
+          className={clsx(styles.table.body.cell.base, colors.text.secondary)}
         >
           {formatTimestamp(patient.vitals.timestamp)}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <td className={styles.table.body.cell.action}>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300
-                     flex items-center justify-end gap-1"
+            className={buttonStyles.patient.action}
           >
             {isExpanded ? (
               <>
-                Less <ChevronUp className="w-4 h-4" />
+                Less <ChevronUp className={buttonStyles.icon.base} />
               </>
             ) : (
               <>
-                More <ChevronDown className="w-4 h-4" />
+                More <ChevronDown className={buttonStyles.icon.base} />
               </>
             )}
           </button>
@@ -122,12 +120,15 @@ export const PatientRow: React.FC<PatientRowProps> = ({
       </tr>
 
       {isExpanded && (
-        <tr className={theme === "dark" ? "bg-slate-800/50" : "bg-gray-50"}>
-          <td colSpan={9} className="px-6 py-4">
-            <div className="grid grid-cols-3 gap-6">
+        <tr className={styles.table.body.row.expanded}>
+          <td colSpan={9} className={styles.table.expanded.section}>
+            <div className={styles.table.expanded.grid}>
               <div>
                 <h4
-                  className={`text-sm font-medium ${colors.text.primary} mb-2`}
+                  className={clsx(
+                    styles.table.expanded.title,
+                    colors.text.primary
+                  )}
                 >
                   Medical History
                 </h4>
@@ -135,7 +136,10 @@ export const PatientRow: React.FC<PatientRowProps> = ({
                   {medicalHistory.map((condition, index) => (
                     <li
                       key={index}
-                      className={`text-sm ${colors.text.secondary}`}
+                      className={clsx(
+                        styles.table.expanded.content,
+                        colors.text.secondary
+                      )}
                     >
                       • {condition}
                     </li>
@@ -145,29 +149,40 @@ export const PatientRow: React.FC<PatientRowProps> = ({
 
               <div>
                 <h4
-                  className={`text-sm font-medium ${colors.text.primary} mb-2`}
+                  className={clsx(
+                    styles.table.expanded.title,
+                    colors.text.primary
+                  )}
                 >
                   Vital Trends
                 </h4>
-                <div className={`text-sm ${colors.text.secondary}`}>
+                <div
+                  className={clsx(
+                    styles.table.expanded.content,
+                    colors.text.secondary
+                  )}
+                >
                   Trends visualization coming soon...
                 </div>
               </div>
 
               <div>
                 <h4
-                  className={`text-sm font-medium ${colors.text.primary} mb-2`}
+                  className={clsx(
+                    styles.table.expanded.title,
+                    colors.text.primary
+                  )}
                 >
                   Notes
                 </h4>
                 <textarea
-                  className={`w-full h-24 px-3 py-2 text-sm rounded-md
-                            ${
-                              theme === "dark"
-                                ? "bg-slate-700 border-0 text-white placeholder-gray-400"
-                                : "bg-white border border-gray-200 text-gray-900 placeholder-gray-500"
-                            }
-                            focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={clsx(
+                    "w-full h-24 px-3 py-2 text-sm rounded-md",
+                    theme === "dark"
+                      ? "bg-slate-700 border-0 text-white placeholder-gray-400"
+                      : "bg-white border border-gray-200 text-gray-900 placeholder-gray-500",
+                    "focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  )}
                   placeholder="Add notes..."
                 />
               </div>
@@ -176,20 +191,20 @@ export const PatientRow: React.FC<PatientRowProps> = ({
             <div className="mt-4 flex items-center space-x-6">
               {patient.fallRisk && (
                 <div className="flex items-center text-yellow-500 dark:text-yellow-400">
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Fall Risk</span>
+                  <AlertTriangle className={buttonStyles.icon.base} />
+                  <span className="text-sm ml-2">Fall Risk</span>
                 </div>
               )}
               {patient.isolation && (
                 <div className="flex items-center text-purple-500 dark:text-purple-400">
-                  <Shield className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Isolation Required</span>
+                  <Shield className={buttonStyles.icon.base} />
+                  <span className="text-sm ml-2">Isolation Required</span>
                 </div>
               )}
               {patient.npo && (
                 <div className="flex items-center text-red-500 dark:text-red-400">
-                  <Ban className="w-4 h-4 mr-2" />
-                  <span className="text-sm">NPO (Nothing by Mouth)</span>
+                  <Ban className={buttonStyles.icon.base} />
+                  <span className="text-sm ml-2">NPO (Nothing by Mouth)</span>
                 </div>
               )}
             </div>

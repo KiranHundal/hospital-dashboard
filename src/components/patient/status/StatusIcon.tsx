@@ -1,4 +1,6 @@
 import type { LucideIcon } from "lucide-react";
+import { styles } from "../../../styles";
+import clsx from "clsx";
 
 interface StatusIconProps {
   condition?: boolean;
@@ -11,11 +13,8 @@ export const StatusIcon = ({
   condition = false,
   icon: Icon,
   label,
-  color
+  color,
 }: StatusIconProps): JSX.Element | null =>
   condition ? (
-    <Icon
-      className={`w-5 h-5 ${color}`}
-      aria-label={label}
-    />
+    <Icon className={clsx(styles.status.icon.base, color)} aria-label={label} />
   ) : null;

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+const tailwindConfig = {
+  mode: 'jit',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -15,9 +16,10 @@ export default {
       animation: {
         'spin-once': 'spin-once 0.5s linear'
       }
+    },
   },
-},
   plugins: [],
   darkMode: 'class',
+};
 
-}
+export default tailwindConfig;

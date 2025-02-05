@@ -9,6 +9,8 @@ import {
 import { Patient } from "../../../types/patient";
 import VitalsComparison from "../../patient/splitScreen/VitalsComparison";
 import ComparisonNotes from "../../patient/splitScreen/ComparisonNotes";
+import clsx from "clsx";
+import { colorStyles, styles } from "../../../styles";
 
 interface SplitScreenDashboardProps {
   patients: Patient[];
@@ -77,22 +79,22 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
   }, [patients]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-12rem)]">
-      <div className="bg-white dark:bg-gray-800 p-4 flex items-center justify-between border-b">
-        <div className="flex items-center space-x-4">
+    <div className={styles.splitScreen.container.base}>
+      <div className={styles.splitScreen.container.header}>
+        <div className={styles.splitScreen.container.controlsWrapper}>
           <button
             onClick={() => setSplitView((prev) => !prev)}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            className={styles.splitScreen.button.control}
           >
             {isSplitView ? (
-              <Minimize2 className="text-blue-500" />
+              <Minimize2 className={styles.splitScreen.button.icon.active} />
             ) : (
-              <Maximize2 className="text-gray-500" />
+              <Maximize2 className={styles.splitScreen.button.icon.default} />
             )}
           </button>
 
           <select
-            className="p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+            className={styles.splitScreen.select.control}
             value={splitRatio}
             onChange={(e) => setSplitRatio(Number(e.target.value))}
           >
@@ -103,36 +105,41 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
 
           <button
             onClick={() => setSplitRatio(100 - splitRatio)}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            className={styles.splitScreen.button.control}
           >
-            <ArrowLeftRight className="text-gray-500" />
+            <ArrowLeftRight
+              className={styles.splitScreen.button.icon.default}
+            />
           </button>
 
           <button
             onClick={() => setSyncScroll((prev) => !prev)}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            className={styles.splitScreen.button.control}
             title={`${
               isSyncScroll ? "Disable" : "Enable"
             } synchronized scrolling`}
           >
             {isSyncScroll ? (
-              <Lock className="text-blue-500" />
+              <Lock className={styles.splitScreen.button.icon.active} />
             ) : (
-              <Unlock className="text-gray-500" />
+              <Unlock className={styles.splitScreen.button.icon.default} />
             )}
           </button>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className={styles.splitScreen.container.contentWrapper}>
         <div
           ref={leftPanelRef}
-          className="overflow-y-auto transition-all duration-300 border-r dark:border-gray-700"
+          className={clsx(
+            styles.splitScreen.container.panel.base,
+            styles.splitScreen.container.panel.left
+          )}
           style={{ width: `${splitRatio}%` }}
         >
-          <div className="p-4">
+          <div className={styles.splitScreen.container.panel.content}>
             <select
-              className="w-full p-2 mb-4 border rounded dark:bg-gray-700 dark:border-gray-600"
+              className={styles.splitScreen.select.base}
               value={selectedPatients[0]?.id || ""}
               onChange={(e) => handleSelectPatient(0, e.target.value)}
             >
@@ -141,11 +148,13 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
             </select>
 
             {selectedPatients[0] && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold">
+              <div className={styles.splitScreen.text.content}>
+                <h2 className={styles.splitScreen.text.title}>
                   {selectedPatients[0].name}
                 </h2>
-                <p>Room: {selectedPatients[0].room}</p>
+                <p className={colorStyles.text.muted}>
+                  Room: {selectedPatients[0].room}
+                </p>
                 <VitalsComparison
                   patient={selectedPatients[0]}
                   comparisonPatient={selectedPatients[1]}
@@ -157,25 +166,32 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
 
         <div
           ref={rightPanelRef}
-          className="overflow-y-auto transition-all duration-300"
+          className={clsx(
+            styles.splitScreen.container.panel.base,
+            styles.splitScreen.container.panel.right
+          )}
           style={{ width: `${100 - splitRatio}%` }}
         >
-          <div className="p-4">
+          <div className={styles.splitScreen.container.panel.content}>
             <select
-              className="w-full p-2 mb-4 border rounded dark:bg-gray-700 dark:border-gray-600"
+              className={styles.splitScreen.select.base}
               value={selectedPatients[1]?.id || ""}
               onChange={(e) => handleSelectPatient(1, e.target.value)}
             >
-              <option value="">Select Right Patient</option>
+              <option value="" className={styles.splitScreen.select.option}>
+                Select Right Patient
+              </option>
               {patientOptions}
             </select>
 
             {selectedPatients[1] && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold">
+              <div className={styles.splitScreen.text.content}>
+                <h2 className={styles.splitScreen.text.title}>
                   {selectedPatients[1].name}
                 </h2>
-                <p>Room: {selectedPatients[1].room}</p>
+                <p className={colorStyles.text.muted}>
+                  Room: {selectedPatients[1].room}
+                </p>
                 <VitalsComparison
                   patient={selectedPatients[1]}
                   comparisonPatient={selectedPatients[0]}
@@ -187,8 +203,12 @@ const SplitScreenDashboard: React.FC<SplitScreenDashboardProps> = ({
       </div>
 
       {selectedPatients.some((p) => p) && (
-        <div className="h-72 border-t dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div className="h-full overflow-y-auto p-4">
+        <div className={styles.splitScreen.container.notesSection}>
+          <div className={styles.splitScreen.container.notesContent}>
+            <h3 className={styles.splitScreen.text.heading}>
+              Comparison Notes
+            </h3>
+
             <ComparisonNotes patients={selectedPatients} />
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { VitalSign } from "./VitalSign";
 import type { Patient } from "../../../types/patient";
 import { VitalStatus } from "../../../services/VitalSignsService";
+import { styles } from "../../../styles";
 
 interface PatientVitalsProps {
   vitals: Patient["vitals"];
@@ -8,7 +9,7 @@ interface PatientVitalsProps {
 }
 
 export const PatientVitals = ({ vitals, vitalStatus }: PatientVitalsProps) => (
-  <div className="mt-3 grid grid-cols-3 gap-4">
+  <div className={styles.vital.container}>
     <VitalSign
       label="BP"
       value={vitals.bloodPressure}

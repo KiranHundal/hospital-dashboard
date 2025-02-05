@@ -1,5 +1,6 @@
+import { buttonStyles } from "../../styles/shared";
 import { ViewButtonProps } from "../../types/header";
-
+import clsx from "clsx"
 export const ViewButton = ({
   onClick,
   isActive,
@@ -8,11 +9,10 @@ export const ViewButton = ({
 }: ViewButtonProps) => (
   <button
     onClick={onClick}
-    className={`p-1.5 rounded ${
-      isActive
-        ? "bg-white dark:bg-gray-700 shadow-sm"
-        : "hover:bg-gray-200 dark:hover:bg-gray-600"
-    }`}
+    className={clsx(
+      "p-1.5 rounded",
+      isActive ? buttonStyles.states.active : buttonStyles.states.inactive
+    )}
     aria-label={label}
   >
     {icon}

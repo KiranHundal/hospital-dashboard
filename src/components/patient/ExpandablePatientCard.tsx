@@ -13,6 +13,8 @@ import { PatientVitals } from "./vitals/PatientVitals";
 import { PatientInfoSection } from "./info/PatientInfoSection";
 import { PatientNotes } from "./info/PatientNotes";
 import type { Patient } from "../../types/patient";
+import { styles } from "../../styles";
+import clsx from "clsx";
 
 interface ExpandablePatientCardProps {
   patient: Patient;
@@ -51,51 +53,48 @@ const ExpandablePatientCardBase = ({
 
   return (
     <div
-      className={`
-        relative rounded-lg shadow-sm bg-white dark:bg-gray-800
-        ${isUpdated ? "ring-2 ring-blue-500 ring-opacity-50" : ""}
-      `}
+      className={clsx(
+        styles.expandable.card.container,
+        isUpdated && "ring-2 ring-blue-500 ring-opacity-50"
+      )}
       style={{ isolation: "isolate" }}
     >
-      <div className="p-4">
-        <div className="flex justify-between items-start">
+      <div className={styles.expandable.card.content.inner}>
+        <div className={styles.expandable.card.header.wrapper}>
           <div className="flex items-center space-x-3">
-            <span className="text-lg font-semibold dark:text-white">
+            <span className={styles.expandable.card.header.title}>
               {patient.name}
             </span>
             {isCritical && (
-              <span
-                role="status"
-                className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-              >
+              <span className={styles.expandable.card.header.badge}>
                 Critical
               </span>
             )}
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className={styles.expandable.card.header.controls}>
             <StatusIcon
               condition={patient.fallRisk}
               icon={AlertTriangle}
               label="Fall Risk"
-              color="text-yellow-500"
+              color={styles.status.icon.yellow}
             />
             <StatusIcon
               condition={patient.isolation}
               icon={Shield}
               label="Isolation Required"
-              color="text-purple-500"
+              color={styles.status.icon.purple}
             />
             <StatusIcon
               condition={patient.npo}
               icon={Ban}
               label="NPO (Nothing by Mouth)"
-              color="text-red-500"
+              color={styles.status.icon.red}
             />
 
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              className={styles.expandable.card.header.expandButton}
               aria-expanded={isExpanded}
               aria-label={isExpanded ? "Collapse details" : "Expand details"}
             >
@@ -111,20 +110,20 @@ const ExpandablePatientCardBase = ({
         <PatientInfoSection patient={patient} />
         <PatientVitals vitals={patient.vitals} vitalStatus={vitalStatus} />
 
-        <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+        <div className={styles.expandable.card.content.timestamp}>
           Last updated: {formattedTime}
         </div>
       </div>
 
       <div
-        className={`
-          overflow-hidden transition-all duration-300
-          ${isExpanded ? "max-h-96" : "max-h-0"}
-        `}
+        className={clsx(
+          styles.expandable.card.content.wrapper,
+          isExpanded ? "max-h-96" : "max-h-0"
+        )}
         data-testid="expandable-section"
       >
-        <div className="p-4 border-t dark:border-gray-700">
-          <div className="grid grid-cols-2 gap-4">
+        <div className={styles.expandable.card.section.wrapper}>
+          <div className={styles.expandable.card.content.grid}>
             <PatientStatusSection
               fallRisk={patient.fallRisk}
               isolation={patient.isolation}
@@ -133,11 +132,11 @@ const ExpandablePatientCardBase = ({
             <PatientNotes value={notes} onChange={handleNotesChange} />
           </div>
 
-          <div className="mt-4">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+          <div className={styles.expandable.card.trends.container}>
+            <h4 className={styles.expandable.card.trends.title}>
               Vital Trends
             </h4>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className={styles.expandable.card.trends.content}>
               Trends visualization coming soon...
             </div>
           </div>
