@@ -1,12 +1,35 @@
 import { RefreshCw } from "lucide-react";
-import { RefreshButtonProps } from "../../types/header";
+import { useState } from "react";
 
-   export const RefreshButton = ({ onClick }: RefreshButtonProps) => (
+interface RefreshButtonProps {
+  onClick: () => void | Promise<void>;
+}
+
+export const RefreshButton = ({ onClick }: RefreshButtonProps) => {
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  const handleClick = async () => {
+    setIsSpinning(true);
+    try {
+      await onClick();
+    } catch (error) {
+      console.error('Failed to refresh:', error);
+    } finally {
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
+
+  return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
       aria-label="Refresh data"
     >
-      <RefreshCw className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+      <RefreshCw
+        className={`w-4 h-4 text-gray-600 dark:text-gray-400 ${
+          isSpinning ? 'animate-spin' : ''
+        }`}
+      />
     </button>
-   );
+  );
+};
